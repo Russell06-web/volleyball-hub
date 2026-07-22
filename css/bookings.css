@@ -1,0 +1,31 @@
+/* ===================================================================
+   My Bookings page (bookings.html)
+   =================================================================== */
+
+.stats-strip{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; background:var(--sand); border-radius:var(--r-lg); padding:14px 8px; margin-bottom:16px;}
+.stats-strip.cols-3{grid-template-columns:repeat(3,1fr); margin-bottom:14px;}
+.stat-tile{display:flex; flex-direction:column; align-items:center; gap:2px;}
+.stat-tile svg{color:var(--text-muted); margin-bottom:1px;}
+.stat-tile b{font-size:19px; font-weight:800; color:var(--navy); font-variant-numeric:tabular-nums;}
+.stat-tile span{font-size:11px; color:var(--text-muted); font-weight:600;}
+.stat-tile.warn b{color:var(--warn);}
+.stat-tile.ok b{color:var(--success);}
+
+.tab-filter{margin-bottom:18px;}
+
+.booking-grid{display:grid; grid-template-columns:1fr; gap:14px;}
+.booking-item h3{font-size:15.5px;}
+.booking-item.done{opacity:.7;}
+
+.organizer-row{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+.organizer-row b{display:block; font-size:11px; color:var(--text-muted); font-weight:600; margin-bottom:2px;}
+.organizer-row span{font-size:13px; font-weight:700;}
+
+@media (min-width: 640px){
+  .booking-grid{grid-template-columns:repeat(2,1fr);}
+  .data-grid{grid-template-columns:repeat(4,1fr);}
+}
+@media (min-width: 1024px){
+  .booking-grid{grid-template-columns:repeat(3,1fr);}
+  .stats-strip{max-width:520px;}
+}

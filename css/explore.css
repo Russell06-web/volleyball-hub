@@ -1,0 +1,58 @@
+/* ===================================================================
+   Explore page (index.html) — filters, hero strips, event grid
+   =================================================================== */
+
+.layout{display:flex; flex:1; align-items:flex-start;}
+
+.filter-sidebar{display:none;}
+@media (min-width: 1024px){
+  .filter-sidebar{
+    display:block; width:272px; flex:none; padding:18px 16px 40px;
+    border-right:1px solid var(--border);
+    position:sticky; top:var(--header-h); align-self:stretch; height:fit-content;
+  }
+}
+.filter-sidebar h2{font-size:15px; margin-bottom:14px;}
+.filter-group{margin-bottom:20px;}
+.filter-group h3{font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:10px; font-weight:700;}
+.type-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+.type-card{display:flex; flex-direction:column; align-items:flex-start; gap:6px; padding:12px; border:1px solid var(--border); border-radius:var(--r-md); background:var(--surface); font-size:12.5px; font-weight:700; color:var(--text);}
+.type-card svg{color:var(--text-muted);}
+.type-card.active{border-color:var(--primary); background:var(--primary-tint); color:var(--primary-dark);}
+.type-card.active svg{color:var(--primary);}
+
+/* quick chip row + filter trigger (mobile/tablet only) */
+.filter-chips-mobile{display:flex; align-items:center; gap:8px; overflow-x:auto; padding-bottom:4px; margin-bottom:18px; scrollbar-width:none;}
+.filter-chips-mobile::-webkit-scrollbar{display:none;}
+.filter-chips-mobile .chip{flex:none;}
+.filter-trigger{margin-left:auto; flex:none; background:var(--navy); color:#fff; border-color:var(--navy);}
+@media (min-width: 1024px){ .filter-chips-mobile{display:none;} }
+
+/* full-screen filter modal (mobile/tablet) */
+.filter-modal{position:fixed; inset:0; z-index:50; display:flex; align-items:flex-end; justify-content:center;}
+.filter-modal[hidden]{display:none;}
+.filter-modal-backdrop{position:absolute; inset:0; background:rgba(26,46,69,.45);}
+.filter-modal-sheet{
+  position:relative; width:100%; max-height:88vh; overflow-y:auto;
+  background:var(--surface); border-radius:20px 20px 0 0; padding:18px 18px calc(18px + env(safe-area-inset-bottom));
+  box-shadow:var(--shadow-pop);
+}
+.filter-modal-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;}
+.filter-modal-head h2{font-size:16px;}
+.filter-modal-actions{display:flex; gap:10px; margin-top:8px; position:sticky; bottom:-18px; background:var(--surface); padding-top:10px;}
+.filter-modal-actions .btn-secondary{flex:none; padding-inline:18px;}
+.filter-modal-actions .btn-primary{flex:1;}
+@media (min-width: 640px){
+  .filter-modal{align-items:center;}
+  .filter-modal-sheet{max-width:440px; border-radius:20px; max-height:80vh;}
+}
+
+/* urgent (live pickup game) cards */
+.urgent-grid{display:grid; grid-template-columns:1fr; gap:12px;}
+.urgent-card{border-left:3px solid var(--error);}
+@media (min-width: 640px){ .urgent-grid{grid-template-columns:repeat(2,1fr);} }
+
+/* main event grid */
+.event-grid{display:grid; grid-template-columns:1fr; gap:12px;}
+@media (min-width: 640px){ .event-grid{grid-template-columns:repeat(2,1fr);} }
+@media (min-width: 1024px){ .event-grid{grid-template-columns:repeat(3,1fr);} }
