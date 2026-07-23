@@ -94,6 +94,8 @@ img{max-width:100%; display:block;}
 .btn-primary:hover{background:var(--primary-dark);}
 .btn-secondary{background:var(--surface); color:var(--text); border:1px solid var(--border); padding:12px 18px; border-radius:var(--r-pill); font-weight:700; font-size:14px;}
 .btn-secondary:hover{border-color:var(--text-muted);}
+.btn-secondary:disabled{opacity:.55; cursor:not-allowed;}
+.btn-secondary:disabled:hover{border-color:var(--border);}
 .btn-dark{background:var(--navy); color:#fff; border:none; padding:13px 18px; border-radius:var(--r-pill); font-weight:700; font-size:14px;}
 .btn-dark:hover{background:var(--navy-soft);}
 .full{width:100%;}
@@ -114,6 +116,7 @@ img{max-width:100%; display:block;}
 .chip.active{background:var(--navy); border-color:var(--navy); color:#fff;}
 .chip.warn.active{background:var(--warn); border-color:var(--warn); color:#fff;}
 .chip.ok.active{background:var(--success); border-color:var(--success); color:#fff;}
+.chip.wait.active{background:var(--info); border-color:var(--info); color:#fff;}
 .chip.full{width:100%; text-align:left;}
 .chip-row{display:flex; gap:8px; flex-wrap:wrap;}
 .chip-row.col{flex-direction:column;}
@@ -127,6 +130,7 @@ img{max-width:100%; display:block;}
 .badge.mixed{background:var(--mixed-tint); color:var(--mixed);}
 .badge.warn{background:var(--warn-tint); color:var(--warn);}
 .badge.ok{background:var(--success-tint); color:var(--success);}
+.badge.wait{background:var(--info-tint); color:var(--info);}
 .badge.done{background:var(--sand); color:var(--text-muted);}
 .badge.onlight{background:rgba(255,255,255,.22); color:#fff;}
 .badge.live{background:var(--error-tint); color:var(--error);}

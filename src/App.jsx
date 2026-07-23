@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, useLocation, Link } from 'react-router-dom'
 import { useEffect } from 'react'
 import Icons from './components/Icons'
+import { BookingsProvider } from './context/BookingsContext'
 import LanguageOnboarding from './pages/LanguageOnboarding'
 import Explore from './pages/Explore'
 import EventDetail from './pages/EventDetail'
@@ -26,17 +27,20 @@ function NotFound() {
 export default function App() {
   return (
     <BrowserRouter basename={import.meta.env.BASE_URL}>
-      <Icons />
-      <ScrollToTop />
-      <Routes>
-        <Route path="/" element={<LanguageOnboarding />} />
-        <Route path="/explore" element={<Explore />} />
-        <Route path="/event" element={<EventDetail />} />
-        <Route path="/bookings" element={<Bookings />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/manage" element={<Manage />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+      <BookingsProvider>
+        <Icons />
+        <ScrollToTop />
+        <Routes>
+          <Route path="/" element={<LanguageOnboarding />} />
+          <Route path="/explore" element={<Explore />} />
+          <Route path="/event" element={<EventDetail />} />
+          <Route path="/event/:id" element={<EventDetail />} />
+          <Route path="/bookings" element={<Bookings />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/manage" element={<Manage />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BookingsProvider>
     </BrowserRouter>
   )
 }

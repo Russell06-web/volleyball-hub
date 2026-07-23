@@ -1,8 +1,42 @@
-import { Link } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Icon } from '../components/Icons'
+import RegisterModal from '../components/RegisterModal'
+import { EVENTS, getEventById, isFull } from '../data/events'
+import { useBookings } from '../context/BookingsContext'
+import { downloadEventIcs, hasCalendarDate } from '../utils/ics'
 import '../styles/detail.css'
+import '../styles/modals.css'
 
 export default function EventDetail() {
+  const { id } = useParams()
+  const navigate = useNavigate()
+  const { addBooking } = useBookings()
+  const [modalOpen, setModalOpen] = useState(false)
+
+  const event = getEventById(id) || EVENTS[0]
+  const full = isFull(event)
+  const priceLabel = event.free ? '免費' : `NT$${event.price}`
+
+  function handleConfirm(registrant) {
+    addBooking({
+      eventId: event.id,
+      title: event.title,
+      status: full ? 'waitlist' : 'pending',
+      level: event.level,
+      loc: event.loc,
+      date: event.date,
+      time: `${event.time}${event.endTime ? `–${event.endTime}` : ''}`,
+      org: event.org,
+      phone: event.phone,
+      price: priceLabel,
+      free: event.free,
+      registrant,
+    })
+    setModalOpen(false)
+    navigate('/bookings')
+  }
+
   return (
     <>
       <header className="detail-header">
@@ -16,27 +50,34 @@ export default function EventDetail() {
 
       <div className="detail-layout">
         <main className="detail-main">
-          <div className="match-banner">
-            <Icon id="i-check" size={20} />
-            <div><b>非常適合你！</b><span>根據你的資料，這個活動很適合你</span></div>
-            <b className="match-pct">85%</b>
-          </div>
+          {full ? (
+            <div className="match-banner wait">
+              <Icon id="i-info" size={20} />
+              <div><b>目前活動已額滿</b><span>你可以加入候補名單，若有名額釋出主辦單位會主動聯繫</span></div>
+            </div>
+          ) : (
+            <div className="match-banner">
+              <Icon id="i-check" size={20} />
+              <div><b>非常適合你！</b><span>根據你的資料，這個活動很適合你</span></div>
+              <b className="match-pct">85%</b>
+            </div>
+          )}
 
           <div className="detail-title-row">
             <div>
-              <h1>週末排球大戰</h1>
-              <div className="tag-row"><span className="tag level">中階</span><span className="rating"><Icon id="i-star" size={14} />4.8</span></div>
+              <h1>{event.title}</h1>
+              <div className="tag-row"><span className="tag level">{event.level}</span><span className="rating"><Icon id="i-star" size={14} />{event.rating}</span></div>
             </div>
-            <span className="badge featured lg">推薦</span>
+            {event.badgeLabel && <span className="badge featured lg">{event.badgeLabel}</span>}
           </div>
 
           <section className="info-card">
             <h2>活動資訊</h2>
             <ul className="info-list">
-              <li><Icon id="i-pin" size={18} /><div><b>活動地點</b><span>大安運動中心</span><a href="#top">查看地圖 →</a></div></li>
-              <li><Icon id="i-calendar" size={18} /><div><b>活動日期</b><span>2025-12-17</span></div></li>
-              <li><Icon id="i-clock" size={18} /><div><b>活動時間</b><span>18:00</span></div></li>
-              <li><Icon id="i-users" size={18} /><div><b>參加人數</b><span>12 / 16 人</span></div></li>
+              <li><Icon id="i-pin" size={18} /><div><b>活動地點</b><span>{event.loc}</span><a href="#top">查看地圖 →</a></div></li>
+              <li><Icon id="i-calendar" size={18} /><div><b>活動日期</b><span>{event.date}</span></div></li>
+              <li><Icon id="i-clock" size={18} /><div><b>活動時間</b><span>{event.time}{event.endTime ? `–${event.endTime}` : ''}</span></div></li>
+              <li><Icon id="i-users" size={18} /><div><b>參加人數</b><span>{event.registered} / {event.capacity} 人{full ? '（已額滿）' : ''}</span></div></li>
             </ul>
           </section>
 
@@ -52,7 +93,7 @@ export default function EventDetail() {
 
           <section>
             <h2>活動描述</h2>
-            <p className="desc">這是一個專為排球愛好者設計的精彩活動！無論你是初學者還是經驗豐富的球員，都能在這裡找到屬於自己的樂趣。活動將由專業教練帶領，提供友善的競賽環境，讓大家在運動中交流學習。</p>
+            <p className="desc">{event.description}</p>
             <div className="notice">
               <Icon id="i-info" size={18} />
               <div><b>活動須知</b><ul><li>請穿著運動服裝及球鞋</li><li>自備飲水及毛巾</li><li>提前 10 分鐘到場報到</li></ul></div>
@@ -61,20 +102,27 @@ export default function EventDetail() {
         </main>
 
         <aside className="booking-card">
-          <div className="booking-price"><span className="price">NT$250</span><span>包含場地費、器材使用費</span></div>
+          <div className="booking-price"><span className="price">{priceLabel}</span><span>包含場地費、器材使用費</span></div>
           <ul className="booking-mini">
-            <li><Icon id="i-users" size={15} />已報名 12 / 16 人</li>
-            <li><Icon id="i-calendar" size={15} />2025-12-17・18:00</li>
+            <li><Icon id="i-users" size={15} />已報名 {event.registered} / {event.capacity} 人</li>
+            <li><Icon id="i-calendar" size={15} />{event.date}・{event.time}</li>
           </ul>
-          <Link to="/bookings" className="btn-primary full">立即報名</Link>
+          <button className="btn-primary full" onClick={() => setModalOpen(true)}>{full ? '加入候補名單' : '立即報名'}</button>
+          {hasCalendarDate(event) && (
+            <button className="btn-secondary full" onClick={() => downloadEventIcs(event)}>
+              <Icon id="i-calendar" size={15} />加入行事曆
+            </button>
+          )}
           <Link to="/explore" className="btn-secondary full">返回首頁</Link>
         </aside>
       </div>
 
       <div className="sticky-cta detail-cta">
         <Link to="/explore" className="btn-secondary">返回首頁</Link>
-        <Link to="/bookings" className="btn-primary">立即報名 · NT$250</Link>
+        <button className="btn-primary" onClick={() => setModalOpen(true)}>{full ? '加入候補名單' : `立即報名 · ${priceLabel}`}</button>
       </div>
+
+      <RegisterModal event={event} open={modalOpen} onClose={() => setModalOpen(false)} onConfirm={handleConfirm} />
     </>
   )
 }

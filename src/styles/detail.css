@@ -13,6 +13,7 @@
 .match-banner b{display:block; font-size:13.5px;}
 .match-banner span{font-size:12px; opacity:.85;}
 .match-pct{margin-left:auto; font-size:20px; font-variant-numeric:tabular-nums;}
+.match-banner.wait{background:var(--info-tint); color:var(--info);}
 
 .detail-title-row{display:flex; align-items:flex-start; justify-content:space-between; gap:10px;}
 .detail-title-row h1{font-size:21px; margin-bottom:6px;}
@@ -54,3 +55,5 @@
   .booking-mini li{display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--text-muted);}
   .sticky-cta.detail-cta{display:none;}
 }
+
+.booking-card .btn-secondary{display:flex; align-items:center; justify-content:center; gap:6px;}
