@@ -1,0 +1,77 @@
+/* ===================================================================
+   Language onboarding screen — Figma node 2191:10395 ("選擇語言")
+   Reference frame: 440 x 956, bg #FAFAFA
+   =================================================================== */
+
+.lang-screen{
+  min-height:100dvh;
+  background:#FAFAFA;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:
+    max(24px, env(safe-area-inset-top))
+    24px
+    max(28px, env(safe-area-inset-bottom));
+}
+
+.lang-logo{
+  margin-top:clamp(40px, 12vh, 120px);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:10px;
+}
+.lang-logo svg{ width:clamp(64px, 18vw, 92px); height:auto; }
+.lang-logo .wordmark{
+  color:var(--primary);
+  font-weight:800;
+  letter-spacing:.16em;
+  text-align:center;
+  line-height:1.25;
+  font-size:clamp(18px, 5.6vw, 26px);
+  text-transform:uppercase;
+}
+
+.lang-title{
+  color:var(--navy);
+  font-weight:600;
+  font-size:clamp(24px, 7.6vw, 32.9px);
+  text-align:center;
+  margin-top:clamp(28px, 9vh, 96px);
+}
+
+.lang-buttons{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:20px;
+  margin-top:clamp(28px, 8vh, 62px);
+}
+
+.lang-btn{
+  position:relative;
+  width:78px;
+  height:32px;
+  border:1px solid #000;
+  border-radius:16px;
+  background:transparent;
+  color:#000;
+  font-family:inherit;
+  font-weight:600;
+  font-size:17px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+}
+.lang-btn:hover{ background:rgba(0,0,0,.05); }
+.lang-btn:active{ background:rgba(0,0,0,.1); }
+.lang-btn:focus-visible{ outline:2px solid var(--primary); outline-offset:2px; }
+
+/* expand the tap target to ~44px without changing the visible 78x32 pill */
+.lang-btn::before{
+  content:"";
+  position:absolute;
+  inset:-8px;
+}
