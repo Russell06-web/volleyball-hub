@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Header from '../components/Header'
 import BottomTabs from '../components/BottomTabs'
 import SiteFooter from '../components/SiteFooter'
-import FilterPanel from '../components/FilterPanel'
+import FilterPanel, { DEFAULT_FILTERS, matchesFilters } from '../components/FilterPanel'
 import FilterModal from '../components/FilterModal'
 import { Icon } from '../components/Icons'
 import { EVENTS, isFull } from '../data/events'
@@ -12,6 +12,7 @@ import '../styles/explore.css'
 const FEATURED = EVENTS.filter((e) => e.section === 'featured')
 const URGENT = EVENTS.filter((e) => e.section === 'urgent')
 const MORE = EVENTS.filter((e) => e.section === 'more')
+const QUICK_TYPES = ['全部', '排球', '沙灘排球', '室內排球']
 
 function EventCard({ ev }) {
   const full = isFull(ev)
@@ -42,6 +43,20 @@ function EventCard({ ev }) {
 
 export default function Explore() {
   const [filterOpen, setFilterOpen] = useState(false)
+  const [filters, setFilters] = useState(DEFAULT_FILTERS)
+
+  function handleChange(key, value) {
+    setFilters((f) => ({ ...f, [key]: value }))
+  }
+  function handleReset() {
+    setFilters(DEFAULT_FILTERS)
+  }
+
+  const filteredFeatured = useMemo(() => FEATURED.filter((e) => matchesFilters(e, filters)), [filters])
+  const filteredUrgent = useMemo(() => URGENT.filter((e) => matchesFilters(e, filters)), [filters])
+  const filteredMore = useMemo(() => MORE.filter((e) => matchesFilters(e, filters)), [filters])
+  const totalCount = filteredFeatured.length + filteredUrgent.length + filteredMore.length
+  const isFiltering = JSON.stringify(filters) !== JSON.stringify(DEFAULT_FILTERS)
 
   return (
     <>
@@ -49,60 +64,88 @@ export default function Explore() {
 
       <div className="layout">
         <aside className="filter-sidebar" aria-label="篩選活動">
-          <FilterPanel />
+          <FilterPanel filters={filters} onChange={handleChange} onReset={handleReset} resultCount={totalCount} />
         </aside>
 
         <main className="content">
           <div className="filter-chips-mobile" aria-label="快速篩選">
-            <button className="chip primary active">全部</button>
-            <button className="chip">排球</button>
-            <button className="chip">沙灘排球</button>
-            <button className="chip">室內排球</button>
+            {QUICK_TYPES.map((t) => (
+              <button
+                key={t}
+                type="button"
+                className={`chip primary${filters.type === t ? ' active' : ''}`}
+                onClick={() => handleChange('type', t)}
+              >
+                {t}
+              </button>
+            ))}
             <button className="icon-btn filter-trigger" aria-label="更多篩選" aria-haspopup="dialog" onClick={() => setFilterOpen(true)}>
               <Icon id="i-filter" size={17} />
             </button>
           </div>
 
-          <section className="strip">
-            <div className="strip-head"><h2>熱門活動</h2><a href="#top" className="see-all">查看全部 <Icon id="i-chevron" size={14} /></a></div>
-            <div className="card-scroll">
-              {FEATURED.map((ev) => <EventCard key={ev.id} ev={ev} />)}
-            </div>
-          </section>
+          {isFiltering && (
+            <p className="filter-result-count top">
+              {totalCount} 場活動符合篩選條件
+              <button type="button" className="link-btn" onClick={handleReset}>清除篩選</button>
+            </p>
+          )}
+
+          {filteredFeatured.length > 0 && (
+            <section className="strip">
+              <div className="strip-head"><h2>熱門活動</h2><a href="#top" className="see-all">查看全部 <Icon id="i-chevron" size={14} /></a></div>
+              <div className="card-scroll">
+                {filteredFeatured.map((ev) => <EventCard key={ev.id} ev={ev} />)}
+              </div>
+            </section>
+          )}
+
+          {filteredUrgent.length > 0 && (
+            <section className="strip">
+              <div className="strip-head">
+                <h2>臨打專區 <span className="badge live"><i />急徵隊友</span></h2>
+                <a href="#top" className="see-all">查看全部 <Icon id="i-chevron" size={14} /></a>
+              </div>
+              <div className="urgent-grid">
+                {filteredUrgent.map((ev) => (
+                  <article key={ev.id} className="card urgent-card">
+                    <div className="card-top"><span className="badge live"><i />{ev.badgeLabel}</span></div>
+                    <Link to={`/event/${ev.id}`}><h3>{ev.title}</h3></Link>
+                    <ul className="meta">
+                      <li><Icon id="i-pin" size={14} />{ev.loc}</li>
+                      <li><Icon id="i-clock" size={14} />{ev.date} {ev.time}</li>
+                      <li><Icon id="i-users" size={14} />{ev.registered} / {ev.capacity} 人</li>
+                    </ul>
+                    <div className="card-foot"><span className="price">NT${ev.price}</span><Link to={`/event/${ev.id}`} className="btn-cta urgent">立刻加入</Link></div>
+                  </article>
+                ))}
+              </div>
+            </section>
+          )}
 
           <section className="strip">
-            <div className="strip-head">
-              <h2>臨打專區 <span className="badge live"><i />急徵隊友</span></h2>
-              <a href="#top" className="see-all">查看全部 <Icon id="i-chevron" size={14} /></a>
-            </div>
-            <div className="urgent-grid">
-              {URGENT.map((ev) => (
-                <article key={ev.id} className="card urgent-card">
-                  <div className="card-top"><span className="badge live"><i />{ev.badgeLabel}</span></div>
-                  <Link to={`/event/${ev.id}`}><h3>{ev.title}</h3></Link>
-                  <ul className="meta">
-                    <li><Icon id="i-pin" size={14} />{ev.loc}</li>
-                    <li><Icon id="i-clock" size={14} />{ev.date} {ev.time}</li>
-                    <li><Icon id="i-users" size={14} />{ev.registered} / {ev.capacity} 人</li>
-                  </ul>
-                  <div className="card-foot"><span className="price">NT${ev.price}</span><Link to={`/event/${ev.id}`} className="btn-cta urgent">立刻加入</Link></div>
-                </article>
-              ))}
-            </div>
-          </section>
-
-          <section className="strip">
-            <div className="strip-head"><h2>更多活動</h2><span className="result-count">{MORE.length} 場符合條件</span></div>
-            <div className="event-grid">
-              {MORE.map((ev) => <EventCard key={ev.id} ev={ev} />)}
-            </div>
+            <div className="strip-head"><h2>更多活動</h2><span className="result-count">{filteredMore.length} 場符合條件</span></div>
+            {filteredMore.length === 0 ? (
+              <p className="empty-state">沒有符合篩選條件的活動，試試調整篩選項目。</p>
+            ) : (
+              <div className="event-grid">
+                {filteredMore.map((ev) => <EventCard key={ev.id} ev={ev} />)}
+              </div>
+            )}
           </section>
         </main>
       </div>
 
       <SiteFooter />
       <BottomTabs active="explore" />
-      <FilterModal open={filterOpen} onClose={() => setFilterOpen(false)} />
+      <FilterModal
+        open={filterOpen}
+        onClose={() => setFilterOpen(false)}
+        filters={filters}
+        onChange={handleChange}
+        onReset={handleReset}
+        resultCount={totalCount}
+      />
     </>
   )
 }

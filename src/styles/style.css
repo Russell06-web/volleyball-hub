@@ -100,6 +100,9 @@ img{max-width:100%; display:block;}
 .btn-dark:hover{background:var(--navy-soft);}
 .full{width:100%;}
 
+.link-btn{background:none; border:none; color:var(--primary); font-weight:700; font-size:12.5px; cursor:pointer;}
+.link-btn:hover{text-decoration:underline;}
+
 .btn-cta{background:var(--primary); color:#fff; border:none; padding:8px 16px; border-radius:var(--r-pill); font-weight:700; font-size:12.5px;}
 .btn-cta:hover{background:var(--primary-dark);}
 .btn-cta.urgent{background:var(--error);}
