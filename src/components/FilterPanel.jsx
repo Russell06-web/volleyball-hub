@@ -1,12 +1,14 @@
 import { Icon } from './Icons'
+import { matchesPriceBracket } from '../utils/priceBracket'
 
 export const DEFAULT_FILTERS = { type: '全部', gender: '不限', level: '全部', price: '全部', city: '全部' }
 
 const TYPES = [
   { icon: 'i-ball', label: '全部' },
-  { icon: 'i-trend', label: '排球' },
-  { icon: 'i-users', label: '沙灘排球' },
   { icon: 'i-home', label: '室內排球' },
+  { icon: 'i-users', label: '沙灘排球' },
+  { icon: 'i-trend', label: '草地排球' },
+  { icon: 'i-heart', label: '親子・體驗' },
 ]
 const GENDERS = ['不限', '男生', '女生', '混合']
 const LEVELS = ['全部', '初階', '中階', '高階']
@@ -18,9 +20,7 @@ export function matchesFilters(ev, f) {
   if (f.gender !== '不限' && ev.gender !== f.gender && ev.gender !== '不限') return false
   if (f.level !== '全部' && ev.level !== f.level && ev.level !== '不限') return false
   if (f.city !== '全部' && ev.city !== f.city) return false
-  if (f.price === 'NT$ 300 以下' && ev.price >= 300) return false
-  if (f.price === 'NT$ 300–500' && (ev.price < 300 || ev.price > 500)) return false
-  if (f.price === 'NT$ 500 以上' && ev.price <= 500) return false
+  if (!matchesPriceBracket(ev.price, f.price)) return false
   return true
 }
 

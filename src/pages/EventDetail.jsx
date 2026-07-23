@@ -4,19 +4,36 @@ import { Icon } from '../components/Icons'
 import RegisterModal from '../components/RegisterModal'
 import { EVENTS, getEventById, isFull } from '../data/events'
 import { useBookings } from '../context/BookingsContext'
+import { usePreferences } from '../context/PreferencesContext'
+import { DIMENSION_LABEL, getRecommendation, STATE_META } from '../utils/recommend'
 import { downloadEventIcs, hasCalendarDate } from '../utils/ics'
 import '../styles/detail.css'
 import '../styles/modals.css'
+
+function eventValueLabel(ev, key) {
+  if (key === 'price') return ev.free ? '免費' : `NT$${ev.price}`
+  return ev[key]
+}
+
+function bannerSubtext(rec) {
+  if (rec.full) return '這場活動目前已額滿，你可以加入候補名單'
+  if (rec.state === 'great') return '這個活動符合你目前選擇的多項篩選條件'
+  if (rec.state === 'consider') return '這個活動符合你部分篩選條件，可以列入考慮'
+  return '有些條件是主辦方未限制或尚待確認，請詳閱活動資訊再決定'
+}
 
 export default function EventDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { addBooking } = useBookings()
+  const { filters } = usePreferences()
   const [modalOpen, setModalOpen] = useState(false)
+  const [reasonsOpen, setReasonsOpen] = useState(false)
 
   const event = getEventById(id) || EVENTS[0]
   const full = isFull(event)
   const priceLabel = event.free ? '免費' : `NT$${event.price}`
+  const rec = getRecommendation(event, filters)
 
   function handleConfirm(registrant) {
     addBooking({
@@ -50,16 +67,40 @@ export default function EventDetail() {
 
       <div className="detail-layout">
         <main className="detail-main">
-          {full ? (
+          {rec ? (
+            <div className={`match-banner ${STATE_META[rec.state].tone}`}>
+              <Icon id={rec.state === 'great' ? 'i-check' : 'i-info'} size={20} />
+              <div><b>{STATE_META[rec.state].label}</b><span>{bannerSubtext(rec)}</span></div>
+              <button type="button" className="link-btn reason-toggle" onClick={() => setReasonsOpen((v) => !v)}>
+                查看推薦原因
+              </button>
+            </div>
+          ) : full ? (
             <div className="match-banner wait">
               <Icon id="i-info" size={20} />
               <div><b>目前活動已額滿</b><span>你可以加入候補名單，若有名額釋出主辦單位會主動聯繫</span></div>
             </div>
-          ) : (
-            <div className="match-banner">
-              <Icon id="i-check" size={20} />
-              <div><b>非常適合你！</b><span>根據你的資料，這個活動很適合你</span></div>
-              <b className="match-pct">85%</b>
+          ) : null}
+
+          {rec && reasonsOpen && (
+            <div className="reason-panel">
+              <h3>推薦依據</h3>
+              <ul className="reason-panel-list">
+                {rec.criteria.map((c) => (
+                  <li key={c.key}>
+                    <Icon id={c.met ? 'i-check' : 'i-info'} size={16} className={c.met ? 'ok' : 'muted'} />
+                    <div>
+                      <b>{DIMENSION_LABEL[c.key]}</b>
+                      <span>你的篩選：{filters[c.key]}　活動：{c.unspecified ? `主辦方未限制${DIMENSION_LABEL[c.key]}` : eventValueLabel(event, c.key)}</span>
+                    </div>
+                  </li>
+                ))}
+                <li>
+                  <Icon id={rec.full ? 'i-info' : 'i-check'} size={16} className={rec.full ? 'muted' : 'ok'} />
+                  <div><b>名額</b><span>{rec.full ? '已額滿' : `尚有名額（${event.registered}/${event.capacity}）`}</span></div>
+                </li>
+              </ul>
+              <p className="reason-disclaimer">推薦結果根據使用者提供的偏好產生，實際活動程度以主辦方說明為準。</p>
             </div>
           )}
 
