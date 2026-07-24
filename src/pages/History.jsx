@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import Header from '../components/Header'
 import BottomTabs from '../components/BottomTabs'
@@ -11,6 +12,10 @@ export default function History() {
   const { history } = useHistory()
   const { getEventById } = useEvents()
   const events = history.map((id) => getEventById(id)).filter(Boolean)
+
+  useEffect(() => {
+    document.title = '瀏覽紀錄｜Volleyball Hub'
+  }, [])
 
   return (
     <>

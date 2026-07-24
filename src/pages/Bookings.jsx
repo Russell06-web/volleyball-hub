@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Header from '../components/Header'
 import BottomTabs from '../components/BottomTabs'
@@ -7,6 +7,11 @@ import CancelModal from '../components/CancelModal'
 import { Icon } from '../components/Icons'
 import { useBookings } from '../context/BookingsContext'
 import { useEvents } from '../context/EventsContext'
+import { useToast } from '../context/ToastContext'
+import { planCancelBooking } from '../services/registrationService'
+import { EVENT_STATUS, getEventStatus } from '../utils/eventStatus'
+import { formatPrice } from '../utils/format'
+import { getLevelLabel } from '../constants/taxonomy'
 import '../styles/bookings.css'
 import '../styles/modals.css'
 
@@ -28,9 +33,14 @@ const TABS = [
 
 export default function Bookings() {
   const { bookings, cancelBooking, markReviewed } = useBookings()
-  const { adjustRegistered } = useEvents()
+  const { getEventById, updateEvent } = useEvents()
+  const { showToast } = useToast()
   const [tab, setTab] = useState('all')
   const [cancelTarget, setCancelTarget] = useState(null)
+
+  useEffect(() => {
+    document.title = '我的報名｜Volleyball Hub'
+  }, [])
 
   const counts = useMemo(() => {
     const c = { all: bookings.length, pending: 0, confirmed: 0, waitlist: 0, completed: 0 }
@@ -39,16 +49,20 @@ export default function Bookings() {
   }, [bookings])
 
   const visible = tab === 'all' ? bookings : bookings.filter((b) => b.status === tab)
+  const cancelTargetEvent = cancelTarget ? getEventById(cancelTarget.eventId) : null
 
   function handleConfirmCancel(reason) {
-    // A waitlisted booking never actually occupied a slot, so only
-    // pending/confirmed cancellations free one back up.
-    if (cancelTarget.eventId && (cancelTarget.status === 'pending' || cancelTarget.status === 'confirmed')) {
-      const headcount = cancelTarget.registrant?.mode === 'team' ? (cancelTarget.registrant.teamSize || 1) : 1
-      adjustRegistered(cancelTarget.eventId, -headcount)
+    const event = getEventById(cancelTarget.eventId)
+    const plan = planCancelBooking(event, cancelTarget)
+    if (!plan.ok) {
+      showToast(plan.message)
+      setCancelTarget(null)
+      return
     }
+    if (plan.eventPatch && event) updateEvent(event.id, plan.eventPatch)
     cancelBooking(cancelTarget.id, reason)
     setCancelTarget(null)
+    showToast('已取消')
   }
 
   return (
@@ -63,11 +77,13 @@ export default function Bookings() {
           <div className="stat-tile"><b>{counts.completed}</b><span>已完成</span></div>
         </div>
 
-        <div className="chip-row tab-filter">
+        <div className="chip-row tab-filter" role="tablist" aria-label="報名狀態篩選">
           {TABS.map((t) => (
             <button
               key={t.key}
               type="button"
+              role="tab"
+              aria-selected={tab === t.key}
               className={`chip ${STATUS_META[t.key]?.tone || ''}${tab === t.key ? ' active' : ''}`}
               onClick={() => setTab(t.key)}
             >
@@ -77,54 +93,80 @@ export default function Bookings() {
         </div>
 
         {visible.length === 0 ? (
-          <p style={{ color: 'var(--text-muted)', fontSize: 13.5, textAlign: 'center', padding: '32px 0' }}>這個分類目前沒有報名紀錄。</p>
+          <p className="empty-state">這個分類目前沒有報名紀錄。</p>
         ) : (
           <div className="booking-grid">
-            {visible.map((b) => {
-              const meta = STATUS_META[b.status] || STATUS_META.pending
-              const upcoming = b.status === 'pending' || b.status === 'confirmed' || b.status === 'waitlist'
-              return (
-                <article key={b.id} className={`card booking-item${b.status === 'cancelled' ? ' done' : ''}`}>
-                  <div className="card-top"><h3>{b.title}</h3><span className={`badge ${meta.tone}`}>{meta.label}</span></div>
-                  <div className="tag-row"><span className="tag level">{b.level}</span></div>
-                  <ul className="meta box">
-                    <li><Icon id="i-pin" size={14} />{b.loc}</li>
-                    <li><Icon id="i-calendar" size={14} />{b.date}</li>
-                    <li><Icon id="i-clock" size={14} />{b.time}</li>
-                  </ul>
-                  <div className="organizer-row">
-                    <div><b>主辦單位</b><span>{b.org}</span></div>
-                    <div><b>聯絡電話</b><span>{b.phone}</span></div>
-                  </div>
-                  {b.status === 'cancelled' && b.cancelReason && (
-                    <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0 }}>取消原因：{b.cancelReason}</p>
-                  )}
-                  <div className="card-foot">
-                    <span className={`price${b.free ? ' free' : ''}`}>{b.price}</span>
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      {b.eventId && (
-                        <Link to={`/event/${b.eventId}`} className="btn-secondary sm">查看詳情</Link>
-                      )}
-                      {upcoming && (
-                        <button className="btn-cta danger" onClick={() => setCancelTarget(b)}><Icon id="i-back" size={13} />取消</button>
-                      )}
-                      {b.status === 'completed' && (
-                        <button className="btn-secondary sm" disabled={b.reviewed} onClick={() => markReviewed(b.id)}>
-                          {b.reviewed ? '已評價' : '給予評價'}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </article>
-              )
-            })}
+            {visible.map((b) => (
+              <BookingCard
+                key={b.id}
+                booking={b}
+                event={getEventById(b.eventId)}
+                onCancel={() => setCancelTarget(b)}
+                onReview={() => markReviewed(b.id)}
+              />
+            ))}
           </div>
         )}
       </main>
 
       <SiteFooter />
       <BottomTabs active="bookings" />
-      <CancelModal booking={cancelTarget} onClose={() => setCancelTarget(null)} onConfirm={handleConfirmCancel} />
+      <CancelModal booking={cancelTarget} event={cancelTargetEvent} onClose={() => setCancelTarget(null)} onConfirm={handleConfirmCancel} />
     </>
+  )
+}
+
+function BookingCard({ booking: b, event, onCancel, onReview }) {
+  const meta = STATUS_META[b.status] || STATUS_META.pending
+  const upcoming = b.status === 'pending' || b.status === 'confirmed' || b.status === 'waitlist'
+  const eventCancelled = event && getEventStatus(event) === EVENT_STATUS.CANCELLED
+
+  if (!event) {
+    return (
+      <article className={`card booking-item done`}>
+        <div className="card-top"><h3>活動資料已不存在</h3><span className={`badge ${meta.tone}`}>{meta.label}</span></div>
+        <p className="empty-state">這場活動的資料已經被移除，無法顯示詳細資訊。</p>
+      </article>
+    )
+  }
+
+  return (
+    <article className={`card booking-item${b.status === 'cancelled' ? ' done' : ''}`}>
+      <div className="card-top"><h3>{event.title}</h3><span className={`badge ${meta.tone}`}>{meta.label}</span></div>
+      {eventCancelled && b.status !== 'cancelled' && (
+        <div className="warn-banner inline-warn">
+          <Icon id="i-info" size={16} />
+          <span>主辦方已取消這場活動</span>
+        </div>
+      )}
+      <div className="tag-row">{event.level !== 'open' && <span className="tag level">{getLevelLabel(event.level)}</span>}</div>
+      <ul className="meta box">
+        <li><Icon id="i-pin" size={14} />{event.venueName}</li>
+        <li><Icon id="i-calendar" size={14} />{event.date}</li>
+        <li><Icon id="i-clock" size={14} />{event.startTime}{event.endTime ? `–${event.endTime}` : ''}</li>
+        <li><Icon id="i-users" size={14} />{b.participantCount} 人{b.registrant?.mode === 'team' ? `（${b.registrant.teamName}）` : ''}</li>
+      </ul>
+      <div className="organizer-row">
+        <div><b>主辦單位</b><span>{event.organizerName || '—'}</span></div>
+        <div><b>聯絡電話</b><span>{event.organizerContact || '—'}</span></div>
+      </div>
+      {b.status === 'cancelled' && b.cancelReason && (
+        <p className="cancel-reason-note">取消原因：{b.cancelReason}</p>
+      )}
+      <div className="card-foot">
+        <span className={`price${event.price === 0 ? ' free' : ''}`}>{formatPrice(event.price)}</span>
+        <div className="card-foot-actions">
+          <Link to={`/event/${event.id}`} className="btn-secondary sm">查看詳情</Link>
+          {upcoming && !eventCancelled && (
+            <button className="btn-cta danger" onClick={onCancel}><Icon id="i-back" size={13} />取消</button>
+          )}
+          {b.status === 'completed' && (
+            <button className="btn-secondary sm" disabled={b.reviewed} onClick={onReview}>
+              {b.reviewed ? '已評價' : '給予評價'}
+            </button>
+          )}
+        </div>
+      </div>
+    </article>
   )
 }

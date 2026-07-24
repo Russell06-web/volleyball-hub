@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import Sheet from './Sheet'
 import { Icon } from './Icons'
-
-const DEMO_KEYS = ['vh-bookings', 'vh-preferences', 'vh-favorites', 'vh-history', 'vh-profile']
+import { clearVolleyballHubStorage } from '../services/storage'
 
 export default function ResetDemoDataDialog({ open, onClose }) {
   const [confirming, setConfirming] = useState(false)
@@ -13,7 +12,10 @@ export default function ResetDemoDataDialog({ open, onClose }) {
   }
 
   function handleReset() {
-    DEMO_KEYS.forEach((key) => { try { localStorage.removeItem(key) } catch { /* storage unavailable */ } })
+    // Clearing every vh- key (including vh-events and vh-storage-version)
+    // means the next load re-seeds SEED_EVENTS with dates computed from
+    // *today*, not whatever day the demo data was first created.
+    clearVolleyballHubStorage()
     // Reloading is the simplest way to guarantee every context re-reads
     // its (now-empty) localStorage key and falls back to its real
     // default seed — no risk of one context resetting while another
@@ -39,10 +41,11 @@ export default function ResetDemoDataDialog({ open, onClose }) {
       <p className="reset-scope-intro">會被清除的內容：</p>
       <ul className="reset-scope-list">
         <li>我的報名與候補紀錄</li>
+        <li>活動資料（含你透過「活動管理」建立的活動，日期會在下次載入時重新以今天為基準產生）</li>
         <li>活動篩選偏好</li>
         <li>收藏的活動</li>
         <li>瀏覽歷史</li>
-        <li>個人資料（暱稱、自我介紹、自評程度、語言設定）</li>
+        <li>個人資料（暱稱、自我介紹、自評程度）</li>
       </ul>
 
       {!confirming ? (

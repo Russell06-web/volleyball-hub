@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { Icon, LogoMark } from './Icons'
 import { useProfile } from '../context/ProfileContext'
@@ -9,9 +10,26 @@ const NAV_ITEMS = [
   { key: 'manage', label: '活動管理', to: '/manage' },
 ]
 
-export default function Header({ title, subtitle, active, showSearch = false, avatarLink = true }) {
+export default function Header({
+  title, subtitle, active, showSearch = false, avatarLink = true,
+  searchValue = '', onSearchChange, onSearchClear,
+}) {
   const { profile } = useProfile()
   const initial = profile.name.slice(0, 1) || '?'
+  const searchInputRef = useRef(null)
+
+  function handleKeyDown(e) {
+    if (e.key === 'Escape' && searchValue) {
+      e.preventDefault()
+      onSearchClear?.()
+      searchInputRef.current?.focus()
+    }
+  }
+
+  function handleClear() {
+    onSearchClear?.()
+    searchInputRef.current?.focus()
+  }
 
   return (
     <header className="app-header">
@@ -19,7 +37,7 @@ export default function Header({ title, subtitle, active, showSearch = false, av
         <span className="brand-mark"><LogoMark /></span>
         <div><b>{title}</b><small>{subtitle}</small></div>
       </div>
-      <nav className="nav-links">
+      <nav className="nav-links" aria-label="主要導覽">
         {NAV_ITEMS.map((item) => (
           <Link key={item.key} to={item.to} aria-current={active === item.key ? 'page' : undefined}>
             {item.label}
@@ -29,7 +47,20 @@ export default function Header({ title, subtitle, active, showSearch = false, av
       {showSearch && (
         <div className="header-search">
           <Icon id="i-search" size={16} />
-          <input type="text" placeholder="搜尋活動、球館、城市…" aria-label="搜尋活動" />
+          <input
+            ref={searchInputRef}
+            type="search"
+            placeholder="搜尋活動、球館、城市、主辦方…"
+            aria-label="搜尋活動"
+            value={searchValue}
+            onChange={(e) => onSearchChange?.(e.target.value)}
+            onKeyDown={handleKeyDown}
+          />
+          {searchValue && (
+            <button type="button" className="header-search-clear" aria-label="清除搜尋" onClick={handleClear}>
+              <Icon id="i-chevron" size={12} />
+            </button>
+          )}
         </div>
       )}
       <div className="header-actions">

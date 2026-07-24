@@ -1,4 +1,6 @@
 import { matchesPriceBracket } from './priceBracket'
+import { FILTER_ALL, GENDER_OPEN, LEVEL_OPEN } from '../constants/taxonomy'
+import { isWaitlistable } from './eventStatus'
 
 // This is condition comparison, not personalised recommendation — there's
 // no user profile, no scoring model, and no "smart" anything behind it.
@@ -28,11 +30,11 @@ const REASON_LABEL = {
 
 export function hasActivePreference(filters) {
   return (
-    filters.type !== '全部' ||
-    filters.gender !== '不限' ||
-    filters.level !== '全部' ||
-    filters.city !== '全部' ||
-    filters.price !== '全部'
+    filters.type !== FILTER_ALL ||
+    filters.gender !== FILTER_ALL ||
+    filters.level !== FILTER_ALL ||
+    filters.city !== FILTER_ALL ||
+    filters.price !== FILTER_ALL
   )
 }
 
@@ -41,41 +43,46 @@ export function hasActivePreference(filters) {
 // attributes. Every row is a literal, inspectable comparison, which is
 // what the "查看比對依據" panel renders back to the user. No hidden
 // scoring, no invented match percentage, no claim of personalisation.
+//
+// State rules (see docs/PRODUCT_LIMITATIONS.md for why these three and
+// not a score):
+//   match   — every filter the user actually set is satisfied, nothing
+//             the organiser left unspecified, and the event isn't full.
+//   partial — at least one set filter is satisfied, but not all of them.
+//   check   — an unspecified dimension, a full event, or zero filters
+//             satisfied: there's something a person needs to confirm.
 export function getMatchResult(ev, filters) {
   if (!hasActivePreference(filters)) return null
 
   const criteria = []
 
-  if (filters.type !== '全部') {
+  if (filters.type !== FILTER_ALL) {
     criteria.push({ key: 'type', met: ev.type === filters.type, unspecified: false })
   }
-  if (filters.gender !== '不限') {
-    const unspecified = ev.gender === '不限'
+  if (filters.gender !== FILTER_ALL) {
+    const unspecified = ev.gender === GENDER_OPEN
     criteria.push({ key: 'gender', met: !unspecified && ev.gender === filters.gender, unspecified })
   }
-  if (filters.level !== '全部') {
-    const unspecified = ev.level === '不限'
+  if (filters.level !== FILTER_ALL) {
+    const unspecified = ev.level === LEVEL_OPEN
     criteria.push({ key: 'level', met: !unspecified && ev.level === filters.level, unspecified })
   }
-  if (filters.city !== '全部') {
+  if (filters.city !== FILTER_ALL) {
     criteria.push({ key: 'city', met: ev.city === filters.city, unspecified: false })
   }
-  if (filters.price !== '全部') {
+  if (filters.price !== FILTER_ALL) {
     criteria.push({ key: 'price', met: matchesPriceBracket(ev.price, filters.price), unspecified: false })
   }
 
-  const full = ev.registered >= ev.capacity
+  const full = isWaitlistable(ev)
   const hasUnspecified = criteria.some((c) => c.unspecified)
-  const metCount = criteria.filter((c) => c.met).length
+  const allMet = criteria.length > 0 && criteria.every((c) => c.met)
+  const anyMet = criteria.some((c) => c.met)
 
-  // A full event, or one where the organiser left a dimension the user
-  // filtered on unspecified (level/gender "不限"), always needs a human
-  // to confirm — it never gets labelled a confident match regardless of
-  // how many other criteria line up.
   let state
   if (full || hasUnspecified) state = 'check'
-  else if (metCount >= 2) state = 'match'
-  else if (metCount >= 1) state = 'partial'
+  else if (allMet) state = 'match'
+  else if (anyMet) state = 'partial'
   else state = 'check'
 
   const reasons = []
@@ -85,7 +92,7 @@ export function getMatchResult(ev, filters) {
     const c = criteria.find((cc) => cc.key === key)
     if (c && c.met) reasons.push(REASON_LABEL[key])
   })
-  if (!full && reasons.length < 3) reasons.push(REASON_LABEL.availability)
+  if (!full && reasons.length < 3 && state !== 'check') reasons.push(REASON_LABEL.availability)
 
   return { state, reasons: reasons.slice(0, 3), criteria, full }
 }

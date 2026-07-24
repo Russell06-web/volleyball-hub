@@ -1,21 +1,13 @@
 import { createContext, useContext, useEffect, useState } from 'react'
-
-const STORAGE_KEY = 'vh-favorites'
+import { readStorage, writeStorage, STORAGE_KEYS } from '../services/storage'
 
 const FavoritesContext = createContext(null)
 
 export function FavoritesProvider({ children }) {
-  const [favorites, setFavorites] = useState(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      return raw ? JSON.parse(raw) : []
-    } catch {
-      return []
-    }
-  })
+  const [favorites, setFavorites] = useState(() => readStorage(STORAGE_KEYS.favorites, []))
 
   useEffect(() => {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(favorites)) } catch { /* storage unavailable */ }
+    writeStorage(STORAGE_KEYS.favorites, favorites)
   }, [favorites])
 
   function isFavorite(eventId) {

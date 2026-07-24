@@ -64,8 +64,25 @@
 
 /* live filter result count */
 .filter-result-count{font-size:12px; color:var(--text-muted); text-align:center; margin:4px 0 16px;}
-.filter-result-count.top{display:flex; align-items:center; justify-content:space-between; text-align:left; background:var(--sand); border-radius:var(--r-md); padding:10px 14px; margin-bottom:18px;}
-.empty-state{font-size:13.5px; color:var(--text-muted); text-align:center; padding:32px 0;}
+.filter-result-count.top{display:flex; align-items:center; justify-content:space-between; text-align:left; background:var(--sand); border-radius:var(--r-md); padding:10px 14px; margin:0;}
+.filter-result-count.top .link-btn{flex:none;}
+
+/* search + sort toolbar */
+.explore-toolbar{display:flex; flex-direction:column; gap:10px; margin-bottom:18px;}
+.explore-toolbar .filter-result-count.top{flex:1;}
+.sort-select select{
+  width:100%; font-family:inherit; font-size:12.5px; font-weight:700; color:var(--text);
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md); padding:10px 12px;
+}
+.sort-select select:focus-visible{outline:2px solid var(--primary); outline-offset:1px;}
+@media (min-width: 640px){
+  .explore-toolbar{flex-direction:row; align-items:center;}
+  .sort-select{flex:none; width:170px;}
+}
+
+/* single-section focus view ("查看全部") */
+.back-to-all{display:inline-flex; align-items:center; gap:4px;}
+.section-only-title{font-size:16px; margin-bottom:12px;}
 
 /* explainable condition-match state + reasons (event cards) */
 #more-events{scroll-margin-top:calc(var(--header-h) + 12px);}

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Header from '../components/Header'
 import BottomTabs from '../components/BottomTabs'
@@ -6,7 +6,6 @@ import SiteFooter from '../components/SiteFooter'
 import FilterModal from '../components/FilterModal'
 import InfoDialog from '../components/InfoDialog'
 import EditProfileDialog from '../components/EditProfileDialog'
-import LanguageDialog from '../components/LanguageDialog'
 import ResetDemoDataDialog from '../components/ResetDemoDataDialog'
 import { Icon } from '../components/Icons'
 import { useBookings } from '../context/BookingsContext'
@@ -15,11 +14,11 @@ import { usePreferences } from '../context/PreferencesContext'
 import { useProfile } from '../context/ProfileContext'
 import { matchesFilters } from '../components/FilterPanel'
 import { useEvents } from '../context/EventsContext'
+import { CURRENT_USER_ID } from '../constants/taxonomy'
 import '../styles/profile.css'
 import '../styles/modals.css'
 
 const GITHUB_REPO_URL = 'https://github.com/Russell06-web/volleyball-hub'
-const LANG_LABEL = { 'zh-Hant': '中文', en: 'English', ja: '日本語' }
 
 export default function Profile() {
   const { bookings } = useBookings()
@@ -30,19 +29,22 @@ export default function Profile() {
 
   const [editOpen, setEditOpen] = useState(false)
   const [prefsOpen, setPrefsOpen] = useState(false)
-  const [langOpen, setLangOpen] = useState(false)
   const [privacyOpen, setPrivacyOpen] = useState(false)
   const [aboutOpen, setAboutOpen] = useState(false)
   const [limitsOpen, setLimitsOpen] = useState(false)
   const [helpOpen, setHelpOpen] = useState(false)
   const [resetOpen, setResetOpen] = useState(false)
 
+  useEffect(() => {
+    document.title = '個人資料｜Volleyball Hub'
+  }, [])
+
   const activeBookingsCount = useMemo(
     () => bookings.filter((b) => b.status !== 'cancelled').length,
     [bookings],
   )
   const hostedEventsCount = useMemo(
-    () => events.filter((e) => e.ownedByMe).length,
+    () => events.filter((e) => e.ownerId === CURRENT_USER_ID).length,
     [events],
   )
   const filterResultCount = useMemo(
@@ -103,11 +105,10 @@ export default function Profile() {
               <div><b>活動偏好</b><span>影響探索頁的篩選與條件比對結果</span></div>
               <Icon id="i-chevron" size={16} className="chev" />
             </button>
-            <button type="button" onClick={() => setLangOpen(true)}>
+            <div className="settings-static-row">
               <Icon id="i-info" size={19} />
-              <div><b>語言設定</b><span>目前：{LANG_LABEL[profile.language] || '中文'}</span></div>
-              <Icon id="i-chevron" size={16} className="chev" />
-            </button>
+              <div><b>語言</b><span>繁體中文（其他語言介面規劃於 Future Roadmap）</span></div>
+            </div>
           </section>
 
           <section className="settings-list">
@@ -154,8 +155,6 @@ export default function Profile() {
         resultCount={filterResultCount}
       />
 
-      <LanguageDialog open={langOpen} onClose={() => setLangOpen(false)} />
-
       <InfoDialog open={privacyOpen} onClose={() => setPrivacyOpen(false)} titleId="privacyTitle" title="隱私與資料說明">
         <div className="info-dialog-section">
           <p>Volleyball Hub 目前是一個前端高擬真原型，用來展示排球活動探索、報名與主辦管理的產品設計與互動，<b>不是正式上線的商業服務</b>。</p>
@@ -175,13 +174,7 @@ export default function Profile() {
         </div>
         <div className="info-dialog-section">
           <h3>正式產品仍需要</h3>
-          <ul>
-            <li>HTTPS 傳輸加密</li>
-            <li>後端身分驗證與角色權限管理</li>
-            <li>正式資料庫與資料保存期限規範</li>
-            <li>帳號刪除與個資刪除流程</li>
-            <li>隱私政策與操作紀錄（audit log）</li>
-          </ul>
+          <p>目前部署環境使用 HTTPS，但正式產品仍需要伺服器端身分驗證、權限控制、資料庫安全、靜態資料加密、保存期限、操作紀錄與個資刪除流程。</p>
         </div>
       </InfoDialog>
 
@@ -189,17 +182,17 @@ export default function Profile() {
         <div className="info-dialog-section">
           <h3>目前已完成的功能</h3>
           <ul>
-            <li>活動探索、搜尋、多維度篩選（類型／性別／程度／價格／城市）</li>
+            <li>活動探索、搜尋、多維度篩選（類型／性別／程度／價格／城市），並同步到網址列</li>
             <li>依篩選條件產生的條件比對狀態與比對依據說明</li>
             <li>活動報名（個人／揪團）、候補名單、取消與退款政策說明</li>
             <li>收藏活動、瀏覽歷史</li>
-            <li>主辦方活動管理儀表板與建立活動流程</li>
+            <li>主辦方活動管理儀表板、建立活動與取消／刪除活動流程</li>
             <li>加入行事曆（.ics 下載）</li>
           </ul>
         </div>
         <div className="info-dialog-section">
           <h3>localStorage 模擬範圍</h3>
-          <p>報名紀錄、篩選偏好、收藏、瀏覽歷史、個人資料設定——這五類資料都存在瀏覽器的 localStorage 裡，用來模擬「這個帳號的資料」，但實際上沒有帳號系統。</p>
+          <p>活動資料、報名紀錄、篩選偏好、收藏、瀏覽歷史、個人資料設定——這六類資料都存在瀏覽器的 localStorage 裡，用來模擬「這個帳號的資料」，但實際上沒有帳號系統。</p>
         </div>
         <div className="info-dialog-section">
           <h3>正式產品還缺少的後端能力</h3>

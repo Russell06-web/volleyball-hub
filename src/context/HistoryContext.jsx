@@ -1,22 +1,15 @@
 import { createContext, useContext, useEffect, useState } from 'react'
+import { readStorage, writeStorage, STORAGE_KEYS } from '../services/storage'
 
-const STORAGE_KEY = 'vh-history'
 const MAX_ENTRIES = 20
 
 const HistoryContext = createContext(null)
 
 export function HistoryProvider({ children }) {
-  const [history, setHistory] = useState(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      return raw ? JSON.parse(raw) : []
-    } catch {
-      return []
-    }
-  })
+  const [history, setHistory] = useState(() => readStorage(STORAGE_KEYS.history, []))
 
   useEffect(() => {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(history)) } catch { /* storage unavailable */ }
+    writeStorage(STORAGE_KEYS.history, history)
   }, [history])
 
   // Most-recent-first, de-duplicated, capped — a real (if small) browsing

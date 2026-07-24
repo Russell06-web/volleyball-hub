@@ -12,9 +12,10 @@ Volleyball Hub 是一個**前端高擬真原型**，用來展示產品與互動�
 
 ## 目前這個原型「有」的東西
 
-- React 18 + React Router 的前端路由與元件結構
-- localStorage 模擬的資料層：報名紀錄、篩選偏好、收藏、瀏覽歷史、個人資料設定
-- 純前端可以誠實完成的互動：篩選、條件比對說明、報名表單、候補、取消與退款政策說明（文字說明，不是真的退款）、收藏、瀏覽歷史、.ics 行事曆匯出、Web Share API 分享
+- React 18 + React Router 的前端路由與元件結構，搜尋／篩選／排序／分類檢視同步到網址列（`useSearchParams`）
+- localStorage 模擬的資料層：活動資料、報名紀錄、篩選偏好、收藏、瀏覽歷史、個人資料設定，並具備版本化 migration（`src/services/storageMigration.js`）
+- 集中管理的商業規則：`src/utils/bookingValidation.js`（表單與名額驗證）、`src/services/registrationService.js`（報名／候補／取消的「先驗證再寫入」決策）、`src/utils/eventStatus.js`（活動狀態統一判斷，避免每個頁面各自寫一套 full/cancelled/completed 邏輯）
+- 純前端可以誠實完成的互動：搜尋、篩選、條件比對說明、報名表單（含防重複報名／候補、隊伍人數驗證）、候補、取消與退款政策說明（文字說明，不是真的退款）、收藏、瀏覽歷史、.ics 行事曆匯出、Web Share API 分享、統一 Toast 提示
 
 ## 目前這個原型「沒有」、正式產品需要補上的能力
 
@@ -27,6 +28,7 @@ Volleyball Hub 是一個**前端高擬真原型**，用來展示產品與互動�
 ### 資料與交易
 - 正式資料庫（目前是瀏覽器 localStorage，換裝置、換瀏覽器、清資料就會消失）
 - 資料庫交易（transaction）與**即時名額鎖定**——目前兩個分頁同時搶最後一個名額，兩邊都會「成功報名」，因為完全沒有伺服器仲裁
+- **Idempotency（冪等性）**——`registrationService.js` 在寫入前會先驗證（防止重複報名／重複候補、隊伍人數超額），驗證通過後才會「同時」更新活動與報名兩筆資料，但這只是應用層的先驗證再寫入，不是資料庫等級的原子交易；網路中斷或分頁關閉仍可能讓兩次 `localStorage.setItem` 只成功一半
 - 資料保存期限規範、帳號刪除與個資刪除流程
 - 操作紀錄（audit log）
 

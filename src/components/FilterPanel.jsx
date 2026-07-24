@@ -1,25 +1,30 @@
 import { Icon } from './Icons'
 import { matchesPriceBracket } from '../utils/priceBracket'
+import { CITIES, DEFAULT_FILTERS, EVENT_TYPES, FILTER_ALL, GENDERS, LEVELS, PRICE_BRACKETS } from '../constants/taxonomy'
 
-export const DEFAULT_FILTERS = { type: '全部', gender: '不限', level: '全部', price: '全部', city: '全部' }
+export { DEFAULT_FILTERS }
 
-const TYPES = [
-  { icon: 'i-ball', label: '全部' },
-  { icon: 'i-home', label: '室內排球' },
-  { icon: 'i-users', label: '沙灘排球' },
-  { icon: 'i-trend', label: '草地排球' },
-  { icon: 'i-heart', label: '親子・體驗' },
-]
-const GENDERS = ['不限', '男生', '女生', '混合']
-const LEVELS = ['全部', '初階', '中階', '高階']
-const PRICES = ['全部', 'NT$ 300 以下', 'NT$ 300–500', 'NT$ 500 以上']
-const CITIES = ['全部', '台北', '新北', '桃園']
+const TYPE_OPTIONS = [{ value: FILTER_ALL, label: '全部', icon: 'i-ball' }, ...EVENT_TYPES.map((t) => ({ ...t, icon: iconForType(t.value) }))]
+const GENDER_OPTIONS = [{ value: FILTER_ALL, label: '不限' }, ...GENDERS]
+const LEVEL_OPTIONS = [{ value: FILTER_ALL, label: '全部' }, ...LEVELS]
+const PRICE_OPTIONS = [{ value: FILTER_ALL, label: '全部' }, ...PRICE_BRACKETS]
+const CITY_OPTIONS = [{ value: FILTER_ALL, label: '全部' }, ...CITIES]
+
+function iconForType(value) {
+  switch (value) {
+    case 'indoor': return 'i-home'
+    case 'beach': return 'i-users'
+    case 'grass': return 'i-trend'
+    case 'family': return 'i-heart'
+    default: return 'i-ball'
+  }
+}
 
 export function matchesFilters(ev, f) {
-  if (f.type !== '全部' && ev.type !== f.type) return false
-  if (f.gender !== '不限' && ev.gender !== f.gender && ev.gender !== '不限') return false
-  if (f.level !== '全部' && ev.level !== f.level && ev.level !== '不限') return false
-  if (f.city !== '全部' && ev.city !== f.city) return false
+  if (f.type !== FILTER_ALL && ev.type !== f.type) return false
+  if (f.gender !== FILTER_ALL && ev.gender !== f.gender && ev.gender !== 'open') return false
+  if (f.level !== FILTER_ALL && ev.level !== f.level && ev.level !== 'open') return false
+  if (f.city !== FILTER_ALL && ev.city !== f.city) return false
   if (!matchesPriceBracket(ev.price, f.price)) return false
   return true
 }
@@ -32,8 +37,8 @@ export default function FilterPanel({ heading = '篩選活動', filters, onChang
       <div className="filter-group">
         <h3>活動類型</h3>
         <div className="type-grid">
-          {TYPES.map((t) => (
-            <button key={t.label} type="button" className={`type-card${filters.type === t.label ? ' active' : ''}`} onClick={() => onChange('type', t.label)}>
+          {TYPE_OPTIONS.map((t) => (
+            <button key={t.value} type="button" className={`type-card${filters.type === t.value ? ' active' : ''}`} aria-pressed={filters.type === t.value} onClick={() => onChange('type', t.value)}>
               <Icon id={t.icon} size={20} />{t.label}
             </button>
           ))}
@@ -43,8 +48,8 @@ export default function FilterPanel({ heading = '篩選活動', filters, onChang
       <div className="filter-group">
         <h3>性別限制</h3>
         <div className="chip-row">
-          {GENDERS.map((g) => (
-            <button key={g} type="button" className={`chip dark${filters.gender === g ? ' active' : ''}`} onClick={() => onChange('gender', g)}>{g}</button>
+          {GENDER_OPTIONS.map((g) => (
+            <button key={g.value} type="button" className={`chip dark${filters.gender === g.value ? ' active' : ''}`} aria-pressed={filters.gender === g.value} onClick={() => onChange('gender', g.value)}>{g.label}</button>
           ))}
         </div>
       </div>
@@ -52,8 +57,8 @@ export default function FilterPanel({ heading = '篩選活動', filters, onChang
       <div className="filter-group">
         <h3>技能等級</h3>
         <div className="chip-row">
-          {LEVELS.map((l) => (
-            <button key={l} type="button" className={`chip${filters.level === l ? ' active' : ''}`} onClick={() => onChange('level', l)}>{l}</button>
+          {LEVEL_OPTIONS.map((l) => (
+            <button key={l.value} type="button" className={`chip${filters.level === l.value ? ' active' : ''}`} aria-pressed={filters.level === l.value} onClick={() => onChange('level', l.value)}>{l.label}</button>
           ))}
         </div>
       </div>
@@ -61,8 +66,8 @@ export default function FilterPanel({ heading = '篩選活動', filters, onChang
       <div className="filter-group">
         <h3>價格範圍</h3>
         <div className="chip-row col">
-          {PRICES.map((p) => (
-            <button key={p} type="button" className={`chip full${filters.price === p ? ' active' : ''}`} onClick={() => onChange('price', p)}>{p}</button>
+          {PRICE_OPTIONS.map((p) => (
+            <button key={p.value} type="button" className={`chip full${filters.price === p.value ? ' active' : ''}`} aria-pressed={filters.price === p.value} onClick={() => onChange('price', p.value)}>{p.label}</button>
           ))}
         </div>
       </div>
@@ -70,8 +75,8 @@ export default function FilterPanel({ heading = '篩選活動', filters, onChang
       <div className="filter-group">
         <h3>城市</h3>
         <div className="type-grid">
-          {CITIES.map((c) => (
-            <button key={c} type="button" className={`type-card${filters.city === c ? ' active' : ''}`} onClick={() => onChange('city', c)}>{c}</button>
+          {CITY_OPTIONS.map((c) => (
+            <button key={c.value} type="button" className={`type-card${filters.city === c.value ? ' active' : ''}`} aria-pressed={filters.city === c.value} onClick={() => onChange('city', c.value)}>{c.label}</button>
           ))}
         </div>
       </div>

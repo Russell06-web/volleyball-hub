@@ -1,35 +1,162 @@
 // Seed data for EventsContext — this is what a real API would return on
 // first load. After that, EventsContext (backed by localStorage) is the
-// live source of truth: registrations increment/decrement `registered`,
-// and events created through the "建立活動" wizard get appended to it.
+// live source of truth. Dates are generated relative to "today" the
+// moment this module first runs (so the demo never ships with events
+// that already happened) and then persisted as plain strings — see
+// EventsContext, which only re-reads this seed when vh-events is empty,
+// so a page refresh never pushes these dates further into the future.
 import { futureDate } from '../utils/date'
+import { CURRENT_USER_ID, EVENT_STATUS } from '../constants/taxonomy'
 
 const DEFAULT_DESC = '這是一個專為排球愛好者設計的精彩活動！無論你是初學者還是經驗豐富的球員，都能在這裡找到屬於自己的樂趣。活動將由專業教練帶領，提供友善的競賽環境，讓大家在運動中交流學習。'
+const DEFAULT_RULES = '請提前 10 分鐘到場報到，穿著運動服裝及室內排球鞋，自備飲水及毛巾。'
+
+function makeEvent(overrides) {
+  const price = overrides.price ?? 0
+  return {
+    ownerId: null,
+    description: DEFAULT_DESC,
+    rules: DEFAULT_RULES,
+    timezone: 'Asia/Taipei',
+    waitlistCount: 0,
+    paymentMethod: price === 0 ? '無需付款' : '現場付款',
+    isFeatured: false,
+    isUrgent: false,
+    hasInsurance: false,
+    hasCoach: false,
+    playStyle: '',
+    features: [],
+    status: EVENT_STATUS.PUBLISHED,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    ...overrides,
+    price,
+  }
+}
 
 export const SEED_EVENTS = [
-  { id: 'e1', title: '週末排球大戰', section: 'featured', tone: 'featured', badgeLabel: '熱門', level: '中階', type: '室內排球', gender: '不限', city: '台北', loc: '台北市立體育館', date: futureDate(5), time: '19:00', endTime: '21:00', capacity: 20, registered: 18, price: 280, rating: 4.8, org: '台北排球俱樂部', phone: '0912-345-678' },
-  { id: 'e2', title: '高手對決之夜', section: 'featured', tone: 'featured', badgeLabel: '熱門', level: '高階', type: '室內排球', gender: '不限', city: '新北', loc: '新北運動中心', date: futureDate(7), time: '20:00', endTime: '22:00', capacity: 16, registered: 14, price: 320, rating: 4.6, org: '新北排球聯盟', phone: '0922-456-789' },
-  { id: 'e3', title: '台北女子室內專場', section: 'featured', tone: 'female', badgeLabel: '女生', level: '中階', type: '室內排球', gender: '女生', city: '台北', loc: '大安運動中心', date: futureDate(10), time: '18:00', endTime: '20:00', capacity: 16, registered: 12, price: 250, rating: 4.7, org: '大安女子排球會', phone: '0933-111-222' },
-  { id: 'e4', title: '還缺 3 人！', section: 'urgent', tone: 'live', badgeLabel: '今晚缺打', level: '不限', type: '室內排球', gender: '不限', city: '台北', loc: '中正運動中心', date: '今晚', time: '20:00', endTime: '22:00', capacity: 8, registered: 5, price: 150, rating: 4.3, org: '中正臨打揪團', phone: '0955-333-444' },
-  { id: 'e5', title: '臨打湊團中', section: 'urgent', tone: 'live', badgeLabel: '下午場', level: '不限', type: '室內排球', gender: '不限', city: '台北', loc: '松山運動中心', date: '今天', time: '15:00', endTime: '17:00', capacity: 10, registered: 6, price: 120, rating: 4.2, org: '松山臨打社', phone: '0966-555-666' },
-  { id: 'e6', title: '板橋男子室內賽', section: 'more', tone: 'male', badgeLabel: '男生', level: '不限', type: '室內排球', gender: '男生', city: '新北', loc: '板橋體育館', date: futureDate(9), time: '19:00', endTime: '21:00', capacity: 12, registered: 8, price: 260, rating: 4.4, org: '板橋男子聯盟', phone: '0911-222-333' },
-  { id: 'e7', title: '新北混合室內聯賽', section: 'more', tone: 'mixed', badgeLabel: '混合', level: '不限', type: '室內排球', gender: '混合', city: '新北', loc: '新北運動中心', date: futureDate(12), time: '19:00', endTime: '21:00', capacity: 18, registered: 16, price: 280, rating: 4.5, org: '新北排球聯盟', phone: '0922-456-789' },
-  { id: 'e8', title: '新北男子沙灘賽', section: 'more', tone: 'male', badgeLabel: '男生', level: '不限', type: '沙灘排球', gender: '男生', city: '新北', loc: '福隆沙灘', date: futureDate(13), time: '14:00', endTime: '16:00', capacity: 10, registered: 10, price: 220, rating: 4.6, org: '福隆沙灘排球社', phone: '0977-888-999' },
-  { id: 'e9', title: '三重女子室內賽', section: 'more', tone: 'female', badgeLabel: '女生', level: '不限', type: '室內排球', gender: '女生', city: '新北', loc: '三重體育館', date: futureDate(11), time: '19:00', endTime: '21:00', capacity: 10, registered: 6, price: 250, rating: 4.3, org: '三重女子排球隊', phone: '0933-222-111' },
-  { id: 'e10', title: '桃園混合沙灘賽', section: 'more', tone: 'mixed', badgeLabel: '混合', level: '不限', type: '沙灘排球', gender: '混合', city: '桃園', loc: '桃園沙灘場', date: futureDate(13), time: '14:00', endTime: '16:00', capacity: 12, registered: 8, price: 200, rating: 4.1, org: '桃園沙灘排球會', phone: '0988-777-666' },
-  { id: 'e11', title: '親子排球同樂會', section: 'more', tone: '', badgeLabel: '親子', level: '不限', type: '親子・體驗', gender: '不限', city: '台北', loc: '大安森林公園', date: futureDate(16), time: '09:00', endTime: '12:00', capacity: 30, registered: 15, price: 0, free: true, rating: 4.9, org: '親子運動推廣協會', phone: '0900-123-456' },
-  { id: 'e12', title: '桃園草地排球嘉年華', section: 'more', tone: '', badgeLabel: '體驗', level: '初階', type: '草地排球', gender: '不限', city: '桃園', loc: '青埔運動公園', date: futureDate(18), time: '10:00', endTime: '13:00', capacity: 24, registered: 9, price: 180, rating: 4.4, org: '桃園草地排球推廣會', phone: '0922-000-111' },
+  makeEvent({
+    id: 'e1', title: '週末排球大戰', type: 'indoor', level: 'intermediate', gender: 'open',
+    city: 'taipei', venueName: '台北市立體育館', address: '台北市松山區南京東路四段10號',
+    date: futureDate(5), startTime: '19:00', endTime: '21:00',
+    capacity: 20, registeredCount: 18, price: 280,
+    organizerName: '台北排球俱樂部', organizerContact: '0912-345-678',
+    isFeatured: true, hasInsurance: true, hasCoach: true, playStyle: '競技對抗',
+    features: ['提供飲水機', '更衣室'],
+  }),
+  makeEvent({
+    id: 'e2', title: '高手對決之夜', type: 'indoor', level: 'advanced', gender: 'open',
+    city: 'newTaipei', venueName: '新北運動中心', address: '新北市板橋區縣民大道二段7號',
+    date: futureDate(7), startTime: '20:00', endTime: '22:00',
+    capacity: 16, registeredCount: 14, price: 320,
+    organizerName: '新北排球聯盟', organizerContact: '0922-456-789',
+    isFeatured: true, hasInsurance: true, playStyle: '競技對抗',
+  }),
+  makeEvent({
+    id: 'e3', title: '台北女子室內專場', type: 'indoor', level: 'intermediate', gender: 'female',
+    city: 'taipei', venueName: '大安運動中心', address: '台北市大安區',
+    date: futureDate(10), startTime: '18:00', endTime: '20:00',
+    capacity: 16, registeredCount: 12, price: 250,
+    organizerName: '大安女子排球會', organizerContact: '0933-111-222',
+    isFeatured: true, hasCoach: true, features: ['更衣室', '飲水機'],
+  }),
+  makeEvent({
+    id: 'e4', title: '還缺 3 人！', type: 'indoor', level: 'open', gender: 'open',
+    city: 'taipei', venueName: '中正運動中心', address: '台北市中正區信義路一段1號',
+    date: futureDate(0), startTime: '20:00', endTime: '22:00',
+    capacity: 8, registeredCount: 5, price: 150,
+    organizerName: '中正臨打揪團', organizerContact: '0955-333-444',
+    isUrgent: true, playStyle: '休閒臨打',
+  }),
+  makeEvent({
+    id: 'e5', title: '臨打湊團中', type: 'indoor', level: 'open', gender: 'open',
+    city: 'taipei', venueName: '松山運動中心', address: '台北市松山區',
+    date: futureDate(0), startTime: '15:00', endTime: '17:00',
+    capacity: 10, registeredCount: 6, price: 120,
+    organizerName: '松山臨打社', organizerContact: '0966-555-666',
+    isUrgent: true, playStyle: '休閒臨打',
+  }),
+  makeEvent({
+    id: 'e6', title: '板橋男子室內賽', type: 'indoor', level: 'open', gender: 'male',
+    city: 'newTaipei', venueName: '板橋體育館', address: '新北市板橋區',
+    date: futureDate(9), startTime: '19:00', endTime: '21:00',
+    capacity: 12, registeredCount: 8, price: 260,
+    organizerName: '板橋男子聯盟', organizerContact: '0911-222-333',
+  }),
+  makeEvent({
+    id: 'e7', title: '新北混合室內聯賽', type: 'indoor', level: 'open', gender: 'mixed',
+    city: 'newTaipei', venueName: '新北運動中心', address: '新北市板橋區縣民大道二段7號',
+    date: futureDate(12), startTime: '19:00', endTime: '21:00',
+    capacity: 18, registeredCount: 16, price: 280,
+    organizerName: '新北排球聯盟', organizerContact: '0922-456-789',
+    hasInsurance: true,
+  }),
+  makeEvent({
+    id: 'e8', title: '新北男子沙灘賽', type: 'beach', level: 'open', gender: 'male',
+    city: 'newTaipei', venueName: '福隆沙灘', address: '新北市貢寮區福隆',
+    date: futureDate(13), startTime: '14:00', endTime: '16:00',
+    capacity: 10, registeredCount: 10, price: 220,
+    organizerName: '福隆沙灘排球社', organizerContact: '0977-888-999',
+    playStyle: '沙灘競技',
+  }),
+  makeEvent({
+    id: 'e9', title: '三重女子室內賽', type: 'indoor', level: 'open', gender: 'female',
+    city: 'newTaipei', venueName: '三重體育館', address: '新北市三重區',
+    date: futureDate(11), startTime: '19:00', endTime: '21:00',
+    capacity: 10, registeredCount: 6, price: 250,
+    organizerName: '三重女子排球隊', organizerContact: '0933-222-111',
+  }),
+  makeEvent({
+    id: 'e10', title: '桃園混合沙灘賽', type: 'beach', level: 'open', gender: 'mixed',
+    city: 'taoyuan', venueName: '桃園沙灘場', address: '桃園市',
+    date: futureDate(13), startTime: '14:00', endTime: '16:00',
+    capacity: 12, registeredCount: 8, price: 200,
+    organizerName: '桃園沙灘排球會', organizerContact: '0988-777-666',
+    playStyle: '沙灘競技',
+  }),
+  makeEvent({
+    id: 'e11', title: '親子排球同樂會', type: 'family', level: 'open', gender: 'open',
+    city: 'taipei', venueName: '大安森林公園', address: '台北市大安區新生南路二段1號',
+    date: futureDate(16), startTime: '09:00', endTime: '12:00',
+    capacity: 30, registeredCount: 15, price: 0,
+    organizerName: '親子運動推廣協會', organizerContact: '0900-123-456',
+    hasCoach: true, features: ['提供器材', '親子友善場地'],
+  }),
+  makeEvent({
+    id: 'e12', title: '桃園草地排球嘉年華', type: 'grass', level: 'beginner', gender: 'open',
+    city: 'taoyuan', venueName: '青埔運動公園', address: '桃園市中壢區青埔',
+    date: futureDate(18), startTime: '10:00', endTime: '13:00',
+    capacity: 24, registeredCount: 9, price: 180,
+    organizerName: '桃園草地排球推廣會', organizerContact: '0922-000-111',
+    hasCoach: true, playStyle: '休閒體驗',
+  }),
 
   // "我主辦的活動" — same schema as every other event (so they behave
-  // identically in Explore/EventDetail), just flagged ownedByMe so
-  // Manage.jsx can filter to "events this demo user organises".
-  { id: 'e13', title: '65Player 週五夜晚男排', section: 'more', tone: 'male', badgeLabel: '男生', level: '中階', type: '室內排球', gender: '男生', city: '台北', loc: '台北市立體育館', date: futureDate(6), time: '19:00', endTime: '22:00', capacity: 18, registered: 18, price: 260, rating: 4.5, org: 'Russell', phone: '0912-345-678', ownedByMe: true },
-  { id: 'e14', title: '週末混打友誼賽', section: 'more', tone: 'mixed', badgeLabel: '混合', level: '初階', type: '室內排球', gender: '混合', city: '台北', loc: '大安運動中心', date: futureDate(8), time: '14:00', endTime: '17:00', capacity: 16, registered: 12, price: 200, rating: 4.2, org: 'Russell', phone: '0912-345-678', ownedByMe: true },
-  { id: 'e15', title: '高階對抗賽', section: 'more', tone: '', badgeLabel: '', level: '高階', type: '室內排球', gender: '不限', city: '台北', loc: '中正運動中心', date: futureDate(9), time: '20:00', endTime: '22:00', capacity: 12, registered: 10, price: 300, rating: 4.3, org: 'Russell', phone: '0912-345-678', ownedByMe: true },
+  // identically in Explore/EventDetail), just flagged with ownerId so
+  // Manage.jsx can filter to "events this demo organiser runs".
+  makeEvent({
+    id: 'e13', title: '65Player 週五夜晚男排', type: 'indoor', level: 'intermediate', gender: 'male',
+    city: 'taipei', venueName: '台北市立體育館', address: '台北市松山區南京東路四段10號',
+    date: futureDate(6), startTime: '19:00', endTime: '22:00',
+    capacity: 18, registeredCount: 18, price: 260,
+    organizerName: 'Russell', organizerContact: '0912-345-678', ownerId: CURRENT_USER_ID,
+  }),
+  makeEvent({
+    id: 'e14', title: '週末混打友誼賽', type: 'indoor', level: 'beginner', gender: 'mixed',
+    city: 'taipei', venueName: '大安運動中心', address: '台北市大安區',
+    date: futureDate(8), startTime: '14:00', endTime: '17:00',
+    capacity: 16, registeredCount: 12, price: 200,
+    organizerName: 'Russell', organizerContact: '0912-345-678', ownerId: CURRENT_USER_ID,
+  }),
+  makeEvent({
+    id: 'e15', title: '高階對抗賽', type: 'indoor', level: 'advanced', gender: 'open',
+    city: 'taipei', venueName: '中正運動中心', address: '台北市中正區信義路一段1號',
+    date: futureDate(9), startTime: '20:00', endTime: '22:00',
+    capacity: 12, registeredCount: 10, price: 300,
+    organizerName: 'Russell', organizerContact: '0912-345-678', ownerId: CURRENT_USER_ID,
+  }),
 ]
 
-SEED_EVENTS.forEach((ev) => { if (!ev.description) ev.description = DEFAULT_DESC })
-
 export function isFull(ev) {
-  return ev.registered >= ev.capacity
+  return ev.registeredCount >= ev.capacity
 }

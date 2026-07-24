@@ -57,6 +57,9 @@ img{max-width:100%; display:block;}
 
 .header-search{display:none; align-items:center; gap:8px; background:var(--sand); border:1px solid var(--border); border-radius:var(--r-pill); padding:8px 14px; color:var(--text-muted); flex:1; max-width:340px;}
 .header-search input{border:none; background:none; outline:none; font-size:13px; color:var(--text); width:100%; font-family:inherit;}
+.header-search input::-webkit-search-cancel-button{display:none;}
+.header-search-clear{flex:none; width:22px; height:22px; border-radius:50%; border:none; background:var(--border); color:var(--text-muted); display:flex; align-items:center; justify-content:center; transform:rotate(45deg);}
+.header-search-clear:hover{background:var(--text-muted); color:#fff;}
 
 .header-actions{display:flex; align-items:center; gap:8px; margin-left:auto;}
 .icon-btn{width:36px; height:36px; border-radius:50%; border:1px solid var(--border); background:var(--surface); color:var(--text); display:flex; align-items:center; justify-content:center; flex:none;}
@@ -97,7 +100,7 @@ img{max-width:100%; display:block;}
 .btn-secondary:hover{border-color:var(--text-muted);}
 .btn-secondary:disabled{opacity:.55; cursor:not-allowed;}
 .btn-secondary:disabled:hover{border-color:var(--border);}
-.btn-dark{background:var(--navy); color:#fff; border:none; padding:13px 18px; border-radius:var(--r-pill); font-weight:700; font-size:14px;}
+.btn-dark{background:var(--navy); color:#fff; border:none; padding:13px 18px; border-radius:var(--r-pill); font-weight:700; font-size:14px; margin-bottom:16px;}
 .btn-dark:hover{background:var(--navy-soft);}
 .full{width:100%;}
 
@@ -187,6 +190,7 @@ img{max-width:100%; display:block;}
 .notice b{display:block; font-size:12.5px; margin-bottom:4px;}
 .notice ul{font-size:12px; opacity:.9; display:flex; flex-direction:column; gap:2px;}
 .notice ul li::before{content:"·  ";}
+.notice p{font-size:12px; opacity:.9; margin:0; line-height:1.6;}
 
 .sticky-cta{position:sticky; bottom:0; z-index:20; display:flex; gap:10px; padding:12px 16px calc(12px + env(safe-area-inset-bottom)); background:color-mix(in srgb, var(--surface) 95%, transparent); backdrop-filter:blur(10px); border-top:1px solid var(--border);}
 .sticky-cta .btn-secondary{flex:none; padding-inline:16px;}
@@ -196,6 +200,39 @@ img{max-width:100%; display:block;}
 .site-footer{border-top:1px solid var(--border); padding:20px 16px calc(24px + var(--tabbar-h)); text-align:center; font-size:12px; color:var(--text-muted);}
 @media (min-width: 1024px){ .site-footer{padding:24px 32px;} }
 
+/* Shared empty-state message — used on Explore, Favorites, History,
+   Bookings, and Manage, so it lives in the base stylesheet rather than
+   one page's. */
+.empty-state{font-size:13.5px; color:var(--text-muted); text-align:center; padding:32px 0; display:flex; flex-direction:column; align-items:center; gap:8px;}
+
 @media (prefers-reduced-motion: reduce){
   .badge.live i{animation:none;}
+  .step-progress-fill{transition:none;}
+  .toast{animation:none;}
 }
+
+/* ================= TOASTS ================= */
+.toast-viewport{
+  position:fixed; left:50%; bottom:calc(16px + var(--tabbar-h)); transform:translateX(-50%);
+  z-index:80; display:flex; flex-direction:column; gap:8px; width:calc(100% - 32px); max-width:400px;
+  pointer-events:none;
+}
+@media (min-width: 1024px){ .toast-viewport{bottom:24px;} }
+.toast{
+  pointer-events:auto; display:flex; align-items:center; gap:10px;
+  background:var(--navy); color:#fff; border-radius:var(--r-md); padding:12px 14px;
+  font-size:13px; font-weight:600; box-shadow:var(--shadow-pop);
+  animation:toast-in .18s ease-out;
+}
+.toast span{flex:1;}
+.toast-close{flex:none; width:22px; height:22px; border-radius:50%; border:none; background:rgba(255,255,255,.18); color:#fff; display:flex; align-items:center; justify-content:center; transform:rotate(45deg);}
+.toast-error{background:var(--error);}
+.toast-success{background:var(--success);}
+@keyframes toast-in{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+
+/* Minimum comfortable touch target for icon-only controls, without
+   changing their visible size. */
+.icon-btn::before, .avatar-edit::before{
+  content:""; position:absolute; inset:-4px;
+}
+.icon-btn, .avatar-edit{position:relative;}

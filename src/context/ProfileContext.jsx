@@ -1,10 +1,14 @@
 import { createContext, useContext, useEffect, useState } from 'react'
-
-const STORAGE_KEY = 'vh-profile'
+import { readStorage, writeStorage, STORAGE_KEYS } from '../services/storage'
 
 // Everything here is self-reported by whoever is using the demo — there's
 // no account system, so "level" is a declared preference, not a verified
 // rank, and nothing here is presented as a computed statistic.
+//
+// `language` stays in the schema (so old localStorage data migrates
+// cleanly) but there's no public language picker anymore — see
+// README.md's Future Roadmap for why: without a real i18n dictionary, a
+// language switch that doesn't translate anything is actively misleading.
 const DEFAULT_PROFILE = {
   name: 'Russell',
   bio: '熱愛排球的運動愛好者，期待與大家一起享受排球的樂趣！',
@@ -15,17 +19,13 @@ const DEFAULT_PROFILE = {
 const ProfileContext = createContext(null)
 
 export function ProfileProvider({ children }) {
-  const [profile, setProfileState] = useState(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      return raw ? { ...DEFAULT_PROFILE, ...JSON.parse(raw) } : DEFAULT_PROFILE
-    } catch {
-      return DEFAULT_PROFILE
-    }
-  })
+  const [profile, setProfileState] = useState(() => ({
+    ...DEFAULT_PROFILE,
+    ...readStorage(STORAGE_KEYS.profile, {}),
+  }))
 
   useEffect(() => {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(profile)) } catch { /* storage unavailable */ }
+    writeStorage(STORAGE_KEYS.profile, profile)
   }, [profile])
 
   function updateProfile(patch) {

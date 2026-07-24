@@ -21,8 +21,8 @@ export function hasCalendarDate(event) {
 export function downloadEventIcs(event) {
   if (!hasCalendarDate(event)) return
 
-  const start = toIcsLocal(event.date, event.time)
-  const end = toIcsLocal(event.date, event.endTime || event.time)
+  const start = toIcsLocal(event.date, event.startTime)
+  const end = toIcsLocal(event.date, event.endTime || event.startTime)
   const now = new Date()
   const stamp = `${now.getUTCFullYear()}${pad(now.getUTCMonth() + 1)}${pad(now.getUTCDate())}T${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}${pad(now.getUTCSeconds())}Z`
 
@@ -37,7 +37,7 @@ export function downloadEventIcs(event) {
     `DTSTART:${start}`,
     `DTEND:${end}`,
     `SUMMARY:${escapeIcsText(event.title)}`,
-    `LOCATION:${escapeIcsText(event.loc)}`,
+    `LOCATION:${escapeIcsText(event.venueName)}`,
     `DESCRIPTION:${escapeIcsText(event.description || '')}`,
     'END:VEVENT',
     'END:VCALENDAR',

@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import Header from '../components/Header'
 import BottomTabs from '../components/BottomTabs'
@@ -10,7 +11,13 @@ import '../styles/explore.css'
 export default function Favorites() {
   const { favorites } = useFavorites()
   const { getEventById } = useEvents()
+  // .filter(Boolean) drops any favorite whose event was since deleted —
+  // a stale id with nothing to show for it, not a crash.
   const events = favorites.map((id) => getEventById(id)).filter(Boolean)
+
+  useEffect(() => {
+    document.title = '我的收藏｜Volleyball Hub'
+  }, [])
 
   return (
     <>
