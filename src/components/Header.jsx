@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Icon, LogoMark } from './Icons'
+import { useProfile } from '../context/ProfileContext'
 
 const NAV_ITEMS = [
   { key: 'explore', label: '探索活動', to: '/explore' },
@@ -9,6 +10,9 @@ const NAV_ITEMS = [
 ]
 
 export default function Header({ title, subtitle, active, showSearch = false, avatarLink = true }) {
+  const { profile } = useProfile()
+  const initial = profile.name.slice(0, 1) || '?'
+
   return (
     <header className="app-header">
       <div className="brand">
@@ -29,10 +33,9 @@ export default function Header({ title, subtitle, active, showSearch = false, av
         </div>
       )}
       <div className="header-actions">
-        <button className="icon-btn" aria-label="通知"><Icon id="i-info" size={19} /></button>
         {avatarLink
-          ? <Link to="/profile" className="avatar">佳</Link>
-          : <span className="avatar">佳</span>}
+          ? <Link to="/profile" className="avatar">{initial}</Link>
+          : <span className="avatar">{initial}</span>}
       </div>
     </header>
   )

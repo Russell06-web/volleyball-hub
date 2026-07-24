@@ -61,6 +61,7 @@ img{max-width:100%; display:block;}
 .header-actions{display:flex; align-items:center; gap:8px; margin-left:auto;}
 .icon-btn{width:36px; height:36px; border-radius:50%; border:1px solid var(--border); background:var(--surface); color:var(--text); display:flex; align-items:center; justify-content:center; flex:none;}
 .icon-btn.ghost{border-color:transparent; background:var(--sand);}
+.icon-btn.ghost.active-fav{color:var(--primary); background:var(--primary-tint);}
 .icon-btn.sm{width:30px; height:30px;}
 .icon-btn.danger{color:var(--error); border-color:var(--error-tint); background:var(--error-tint);}
 .icon-btn.danger:hover{border-color:var(--error);}

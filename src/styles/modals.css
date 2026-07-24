@@ -38,3 +38,21 @@
 
 .btn-primary:disabled{ opacity:.45; cursor:not-allowed; box-shadow:none; }
 .btn-primary:disabled:hover{ background:var(--primary); }
+
+/* read-only info dialogs (privacy, about, limitations, help) */
+.info-dialog-body{ font-size:13.5px; line-height:1.7; color:var(--text); display:flex; flex-direction:column; gap:16px; }
+.info-dialog-body h3{ font-size:13px; margin-bottom:6px; }
+.info-dialog-body p{ margin:0; color:var(--text-muted); }
+.info-dialog-body ul{ display:flex; flex-direction:column; gap:6px; color:var(--text-muted); }
+.info-dialog-body ul li{ padding-left:14px; position:relative; }
+.info-dialog-body ul li::before{ content:"·"; position:absolute; left:0; color:var(--text-muted); }
+.info-dialog-body a{ color:var(--primary); font-weight:700; }
+.info-dialog-section{ border-top:1px solid var(--border); padding-top:14px; }
+.info-dialog-section:first-child{ border-top:none; padding-top:0; }
+
+/* reset demo data */
+.reset-scope-intro{ font-size:13px; font-weight:700; margin:0 0 8px; }
+.reset-scope-list{ display:flex; flex-direction:column; gap:6px; font-size:12.5px; color:var(--text-muted); margin-bottom:18px; }
+.reset-scope-list li{ padding-left:14px; position:relative; }
+.reset-scope-list li::before{ content:"·"; position:absolute; left:0; }
+.reset-confirm-step p{ font-size:13px; color:var(--error); font-weight:600; margin:0 0 14px; }

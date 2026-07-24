@@ -67,8 +67,8 @@
 .filter-result-count.top{display:flex; align-items:center; justify-content:space-between; text-align:left; background:var(--sand); border-radius:var(--r-md); padding:10px 14px; margin-bottom:18px;}
 .empty-state{font-size:13.5px; color:var(--text-muted); text-align:center; padding:32px 0;}
 
-/* explainable recommendation state + reasons (event cards) */
+/* explainable condition-match state + reasons (event cards) */
 #more-events{scroll-margin-top:calc(var(--header-h) + 12px);}
-.rec-block{display:flex; flex-direction:column; gap:6px;}
-.rec-reasons{display:flex; flex-wrap:wrap; gap:6px;}
+.match-block{display:flex; flex-direction:column; gap:6px;}
+.match-reasons{display:flex; flex-wrap:wrap; gap:6px;}
 .tag.reason{background:transparent; border:1px solid var(--border); color:var(--text-muted);}

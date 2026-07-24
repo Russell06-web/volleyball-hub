@@ -1,11 +1,12 @@
 import { matchesPriceBracket } from './priceBracket'
 
-// Three explainable states — deliberately not a percentage. There's no
-// data behind a precise match score, so we don't show one.
-export const STATE_META = {
-  great: { label: '很適合你', tone: 'ok' },
-  consider: { label: '可以考慮', tone: 'warn' },
-  check: { label: '請先確認', tone: 'wait' },
+// This is condition comparison, not personalised recommendation — there's
+// no user profile, no scoring model, and no "smart" anything behind it.
+// Three explainable states, never a percentage or a claim of intelligence.
+export const MATCH_STATE_META = {
+  match: { label: '符合目前條件', tone: 'ok' },
+  partial: { label: '部分條件符合', tone: 'warn' },
+  check: { label: '資訊需要確認', tone: 'wait' },
 }
 
 export const DIMENSION_LABEL = {
@@ -36,11 +37,11 @@ export function hasActivePreference(filters) {
 }
 
 // Compares the explore page's currently-selected filters — the only
-// "user preference" this app actually has — against one event's real
+// stated preference this app actually has — against one event's real
 // attributes. Every row is a literal, inspectable comparison, which is
-// what the "查看推薦原因" panel renders back to the user. No hidden
-// scoring, no invented match percentage.
-export function getRecommendation(ev, filters) {
+// what the "查看比對依據" panel renders back to the user. No hidden
+// scoring, no invented match percentage, no claim of personalisation.
+export function getMatchResult(ev, filters) {
   if (!hasActivePreference(filters)) return null
 
   const criteria = []
@@ -67,13 +68,14 @@ export function getRecommendation(ev, filters) {
   const hasUnspecified = criteria.some((c) => c.unspecified)
   const metCount = criteria.filter((c) => c.met).length
 
-  // A full event or one where the organizer left a dimension you care
-  // about unspecified always needs a human to confirm — it never gets
-  // labelled a confident match regardless of how many other criteria hit.
+  // A full event, or one where the organiser left a dimension the user
+  // filtered on unspecified (level/gender "不限"), always needs a human
+  // to confirm — it never gets labelled a confident match regardless of
+  // how many other criteria line up.
   let state
   if (full || hasUnspecified) state = 'check'
-  else if (metCount >= 2) state = 'great'
-  else if (metCount >= 1) state = 'consider'
+  else if (metCount >= 2) state = 'match'
+  else if (metCount >= 1) state = 'partial'
   else state = 'check'
 
   const reasons = []

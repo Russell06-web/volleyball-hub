@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import VolleyballIllustration from '../components/VolleyballIllustration'
 import LanguageOptionButton from '../components/LanguageOptionButton'
+import { useProfile } from '../context/ProfileContext'
 import '../styles/language.css'
 
 // Figma node 2191:10395 ("選擇語言"), file MgsXCN04U1kAiGvaPLcjHg.
@@ -14,9 +15,14 @@ const LANGUAGES = [
 
 export default function LanguageOnboarding() {
   const navigate = useNavigate()
+  const { updateProfile } = useProfile()
 
   function chooseLanguage(code) {
-    localStorage.setItem('vh-language', code)
+    // Stored in the same profile preference the "語言設定" row in Profile
+    // reads/writes, so this choice is remembered — but nothing downstream
+    // actually translates the interface yet, so no destination or copy
+    // here implies otherwise.
+    updateProfile({ language: code })
     // Figma's get_design_context does not expose click/prototype
     // destinations for this node, so we route to the site's real home
     // (探索活動) rather than inventing an unverified destination.

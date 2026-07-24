@@ -5,64 +5,30 @@ import BottomTabs from '../components/BottomTabs'
 import SiteFooter from '../components/SiteFooter'
 import FilterPanel, { matchesFilters } from '../components/FilterPanel'
 import FilterModal from '../components/FilterModal'
+import EventCard from '../components/EventCard'
 import { Icon } from '../components/Icons'
-import { EVENTS, isFull } from '../data/events'
+import { useEvents } from '../context/EventsContext'
 import { usePreferences } from '../context/PreferencesContext'
-import { getRecommendation, STATE_META } from '../utils/recommend'
 import '../styles/explore.css'
 
-const FEATURED = EVENTS.filter((e) => e.section === 'featured')
-const URGENT = EVENTS.filter((e) => e.section === 'urgent')
-const MORE = EVENTS.filter((e) => e.section === 'more')
 const QUICK_TYPES = ['全部', '室內排球', '沙灘排球', '草地排球', '親子・體驗']
-
-function EventCard({ ev, filters }) {
-  const full = isFull(ev)
-  const rec = getRecommendation(ev, filters)
-  return (
-    <article className="card event-card">
-      <div className="card-top">
-        {ev.badgeLabel && <span className={`badge ${ev.tone}`}>{ev.badgeLabel}</span>}
-        <button className="icon-btn ghost" aria-label="收藏"><Icon id="i-heart" size={16} /></button>
-      </div>
-      <Link to={`/event/${ev.id}`}><h3>{ev.title}</h3></Link>
-      <div className="tag-row">
-        {ev.level !== '不限' && <span className="tag level">{ev.level}</span>}
-        <span className="tag type">{ev.type}</span>
-        {full && <span className="tag wait">已額滿</span>}
-      </div>
-      {rec && (
-        <div className="rec-block">
-          <span className={`badge ${STATE_META[rec.state].tone}`}>{STATE_META[rec.state].label}</span>
-          <div className="rec-reasons">
-            {rec.reasons.map((r) => <span key={r} className="tag reason">{r}</span>)}
-          </div>
-        </div>
-      )}
-      <ul className="meta">
-        <li><Icon id="i-pin" size={14} />{ev.loc}</li>
-        <li><Icon id="i-calendar" size={14} />{ev.date}・{ev.time}</li>
-        <li><Icon id="i-users" size={14} />{ev.registered} / {ev.capacity} 人</li>
-      </ul>
-      <div className="card-foot">
-        <span className={`price${ev.free ? ' free' : ''}`}>{ev.free ? '免費' : `NT$${ev.price}`}</span>
-        <Link to={`/event/${ev.id}`} className={`btn-cta${full ? ' waitlist' : ''}`}>{full ? '候補' : '報名'}</Link>
-      </div>
-    </article>
-  )
-}
 
 export default function Explore() {
   const [filterOpen, setFilterOpen] = useState(false)
   const { filters, setFilter, resetFilters } = usePreferences()
+  const { events } = useEvents()
 
   function handleChange(key, value) {
     setFilter(key, value)
   }
 
-  const filteredFeatured = useMemo(() => FEATURED.filter((e) => matchesFilters(e, filters)), [filters])
-  const filteredUrgent = useMemo(() => URGENT.filter((e) => matchesFilters(e, filters)), [filters])
-  const filteredMore = useMemo(() => MORE.filter((e) => matchesFilters(e, filters)), [filters])
+  const featured = useMemo(() => events.filter((e) => e.section === 'featured'), [events])
+  const urgent = useMemo(() => events.filter((e) => e.section === 'urgent'), [events])
+  const more = useMemo(() => events.filter((e) => e.section === 'more'), [events])
+
+  const filteredFeatured = useMemo(() => featured.filter((e) => matchesFilters(e, filters)), [featured, filters])
+  const filteredUrgent = useMemo(() => urgent.filter((e) => matchesFilters(e, filters)), [urgent, filters])
+  const filteredMore = useMemo(() => more.filter((e) => matchesFilters(e, filters)), [more, filters])
   const totalCount = filteredFeatured.length + filteredUrgent.length + filteredMore.length
   const isFiltering = useMemo(() => (
     filters.type !== '全部' || filters.gender !== '不限' || filters.level !== '全部' || filters.price !== '全部' || filters.city !== '全部'

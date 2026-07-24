@@ -6,6 +6,7 @@ import SiteFooter from '../components/SiteFooter'
 import CancelModal from '../components/CancelModal'
 import { Icon } from '../components/Icons'
 import { useBookings } from '../context/BookingsContext'
+import { useEvents } from '../context/EventsContext'
 import '../styles/bookings.css'
 import '../styles/modals.css'
 
@@ -27,6 +28,7 @@ const TABS = [
 
 export default function Bookings() {
   const { bookings, cancelBooking, markReviewed } = useBookings()
+  const { adjustRegistered } = useEvents()
   const [tab, setTab] = useState('all')
   const [cancelTarget, setCancelTarget] = useState(null)
 
@@ -39,6 +41,12 @@ export default function Bookings() {
   const visible = tab === 'all' ? bookings : bookings.filter((b) => b.status === tab)
 
   function handleConfirmCancel(reason) {
+    // A waitlisted booking never actually occupied a slot, so only
+    // pending/confirmed cancellations free one back up.
+    if (cancelTarget.eventId && (cancelTarget.status === 'pending' || cancelTarget.status === 'confirmed')) {
+      const headcount = cancelTarget.registrant?.mode === 'team' ? (cancelTarget.registrant.teamSize || 1) : 1
+      adjustRegistered(cancelTarget.eventId, -headcount)
+    }
     cancelBooking(cancelTarget.id, reason)
     setCancelTarget(null)
   }

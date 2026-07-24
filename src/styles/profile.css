@@ -1,5 +1,5 @@
 /* ===================================================================
-   Profile page (profile.html)
+   Profile page — hero card, "我的活動"/"使用偏好"/"關於與支援" lists
    =================================================================== */
 
 .profile-layout{display:flex; flex-direction:column; gap:20px; padding:16px 16px calc(90px + var(--tabbar-h)); flex:1;}
@@ -11,54 +11,46 @@
 .profile-avatar{width:76px; height:76px; border-radius:50%; background:rgba(255,255,255,.2); border:2px solid rgba(255,255,255,.55); display:flex; align-items:center; justify-content:center; font-size:26px; font-weight:800; position:relative;}
 .avatar-edit{position:absolute; right:-2px; bottom:-2px; width:24px; height:24px; border-radius:50%; background:#fff; color:var(--primary); border:none; display:flex; align-items:center; justify-content:center;}
 .profile-card h1{font-size:19px;}
-.handle{font-size:12.5px; opacity:.85;}
-.rating.onlight{color:#fff;}
 .bio{font-size:12.5px; line-height:1.6; opacity:.92; max-width:32ch;}
-.profile-stats{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; width:100%; margin-top:10px; background:rgba(255,255,255,.14); border-radius:var(--r-md); padding:12px 4px;}
+.profile-stats{display:grid; grid-template-columns:repeat(2,1fr); gap:8px; width:100%; margin-top:10px; background:rgba(255,255,255,.14); border-radius:var(--r-md); padding:12px 4px;}
 .profile-stats div{display:flex; flex-direction:column; gap:1px;}
 .profile-stats b{font-size:17px; font-weight:800; font-variant-numeric:tabular-nums;}
 .profile-stats span{font-size:10.5px; opacity:.85;}
-
-.achievements .card{flex:none; width:150px; align-items:flex-start;}
-.achievement-card b{font-size:13px;} .achievement-card span{font-size:11px; color:var(--text-muted);}
-.ach-icon{width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center;}
-.ach-icon.gold{background:var(--warn-tint); color:var(--warn);}
-.ach-icon.blue{background:var(--info-tint); color:var(--info);}
-.ach-icon.green{background:var(--success-tint); color:var(--success);}
-
-.data-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
-.data-tile{background:var(--sand); border-radius:var(--r-md); padding:14px; display:flex; flex-direction:column; gap:4px; color:var(--primary-dark);}
-.data-tile b{font-size:20px; font-weight:800; color:var(--navy); font-variant-numeric:tabular-nums;}
-.data-tile span{font-size:11.5px; color:var(--text-muted); font-weight:600;}
-.data-tile.blue{color:var(--info);} .data-tile.purple{color:var(--female);} .data-tile.green{color:var(--success);}
+.profile-card .btn-secondary{margin-top:6px; background:rgba(255,255,255,.16); border-color:rgba(255,255,255,.4); color:#fff;}
+.profile-card .btn-secondary:hover{background:rgba(255,255,255,.26);}
 
 .settings-list{background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); box-shadow:var(--shadow-card); overflow:hidden;}
 .settings-list h3{font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.06em; font-weight:700; padding:12px 16px 4px;}
-.settings-list a{display:flex; align-items:center; gap:12px; padding:13px 16px; border-top:1px solid var(--border); font-size:14px; font-weight:700; color:var(--text);}
-.settings-list a:first-of-type{border-top:none;}
-.settings-list a:hover{background:var(--sand);}
-.settings-list a svg:first-child{color:var(--primary); flex:none;}
-.settings-list a div{display:flex; flex-direction:column; gap:1px; flex:1;}
-.settings-list a span{font-size:11.5px; color:var(--text-muted); font-weight:500;}
-.settings-list a .chev{color:var(--text-muted); flex:none;}
-.settings-list a.danger{color:var(--error);}
-.settings-list a.danger svg:first-child{color:var(--error);}
-.joined{text-align:center; font-size:11.5px; color:var(--text-muted); margin:4px 0 0;}
+.settings-list a, .settings-list button{
+  display:flex; align-items:center; gap:12px; width:100%; padding:13px 16px; border-top:1px solid var(--border);
+  font-size:14px; font-weight:700; color:var(--text); background:none; border-left:none; border-right:none; border-bottom:none;
+  text-align:left; font-family:inherit; cursor:pointer;
+}
+.settings-list a:first-of-type, .settings-list button:first-of-type{border-top:none;}
+.settings-list a:hover, .settings-list button:hover{background:var(--sand);}
+.settings-list a svg:first-child, .settings-list button svg:first-child{color:var(--primary); flex:none;}
+.settings-list a div, .settings-list button div{display:flex; flex-direction:column; gap:1px; flex:1; min-width:0;}
+.settings-list a span, .settings-list button span{font-size:11.5px; color:var(--text-muted); font-weight:500;}
+.settings-list a .chev, .settings-list button .chev{color:var(--text-muted); flex:none;}
+.settings-list a.danger, .settings-list button.danger{color:var(--error);}
+.settings-list a.danger svg:first-child, .settings-list button.danger svg:first-child{color:var(--error);}
 
 @media (min-width: 640px){
   .profile-layout{padding:20px 24px calc(100px + var(--tabbar-h));}
   .profile-card{flex-direction:row; text-align:left; align-items:center; gap:20px; padding:20px 26px;}
   .profile-avatar-row{margin-bottom:0;}
   .tag-row.center{justify-content:flex-start;}
-  .profile-card h1, .handle, .bio{width:100%;}
-  .profile-stats{width:auto; flex:1; grid-auto-flow:column; grid-template-columns:repeat(3,minmax(64px,1fr));}
+  .profile-card h1, .bio{width:100%;}
+  .profile-stats{width:auto; flex:1; grid-auto-flow:column; grid-template-columns:repeat(2,minmax(72px,1fr));}
+  .profile-card .btn-secondary{width:auto; margin-top:0;}
 }
 @media (min-width: 1024px){
   .profile-layout{flex-direction:row; align-items:flex-start; gap:28px; padding:28px 32px 60px; max-width:1120px; margin:0 auto;}
   .profile-card{flex-direction:column; text-align:center; align-items:center; width:280px; flex:none; position:sticky; top:88px; padding:26px 22px;}
   .profile-avatar-row{margin-bottom:6px;}
   .tag-row.center{justify-content:center;}
-  .profile-card h1, .handle, .bio{width:auto;}
-  .profile-stats{width:100%; grid-auto-flow:row; grid-template-columns:repeat(3,1fr);}
+  .profile-card h1, .bio{width:auto;}
+  .profile-stats{width:100%; grid-auto-flow:row; grid-template-columns:repeat(2,1fr);}
+  .profile-card .btn-secondary{width:100%; margin-top:6px;}
   .profile-main{flex:1; min-width:0;}
 }
