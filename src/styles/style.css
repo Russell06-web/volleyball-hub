@@ -65,7 +65,9 @@ img{max-width:100%; display:block;}
 .icon-btn{width:36px; height:36px; border-radius:50%; border:1px solid var(--border); background:var(--surface); color:var(--text); display:flex; align-items:center; justify-content:center; flex:none;}
 .icon-btn.ghost{border-color:transparent; background:var(--sand);}
 .icon-btn.ghost.active-fav{color:var(--primary); background:var(--primary-tint);}
+.icon-btn.ghost.active-compare{color:var(--mixed); background:var(--mixed-tint);}
 .icon-btn.sm{width:30px; height:30px;}
+.card-actions{display:flex; align-items:center; gap:6px;}
 .icon-btn.danger{color:var(--error); border-color:var(--error-tint); background:var(--error-tint);}
 .icon-btn.danger:hover{border-color:var(--error);}
 .icon-btn:hover{border-color:var(--primary); color:var(--primary);}
@@ -168,6 +170,14 @@ img{max-width:100%; display:block;}
 .meta svg{flex:none; color:var(--text-muted);}
 .meta.box{background:var(--sand); border-radius:var(--r-md); padding:10px 12px; gap:7px; margin:4px 0;}
 
+/* Information-completeness hint — deliberately understated so it never
+   competes with the status badge or CTA; needs-info gets a touch more
+   weight than partial, never a color-only signal (icon + text always
+   travel together). */
+.info-quality-hint{display:flex; align-items:center; gap:5px; font-size:11px; color:var(--text-muted); margin:2px 0 0;}
+.info-quality-hint svg{flex:none;}
+.info-quality-hint.needs-info{color:var(--warn);}
+
 /* ================= LAYOUT PRIMITIVES ================= */
 .content{flex:1; min-width:0; padding:14px 16px calc(100px + var(--tabbar-h));}
 @media (min-width: 640px){ .content{padding:18px 24px calc(100px + var(--tabbar-h));} }
@@ -229,6 +239,30 @@ img{max-width:100%; display:block;}
 .toast-error{background:var(--error);}
 .toast-success{background:var(--success);}
 @keyframes toast-in{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+
+/* ================= COMPARE TRAY ================= */
+.compare-tray{
+  position:fixed; left:0; right:0; z-index:40;
+  bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom));
+  display:flex; justify-content:center; padding:0 12px 8px;
+  pointer-events:none;
+}
+@media (min-width: 1024px){ .compare-tray{bottom:20px;} }
+.compare-tray-inner{
+  pointer-events:auto; width:100%; max-width:480px;
+  background:var(--navy); color:#fff; border-radius:var(--r-lg); padding:12px 14px calc(12px + env(safe-area-inset-bottom));
+  box-shadow:var(--shadow-pop); display:flex; flex-direction:column; gap:8px;
+}
+.compare-tray-head{display:flex; align-items:center; justify-content:space-between; font-size:12.5px; font-weight:700;}
+.compare-tray-head .link-btn{color:#fff; text-decoration:underline; opacity:.85;}
+.compare-tray-chips{display:flex; flex-wrap:wrap; gap:6px;}
+.compare-tray-chip{
+  display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,.14);
+  border-radius:var(--r-pill); padding:5px 6px 5px 12px; font-size:12px; font-weight:600; max-width:170px;
+}
+.compare-tray-chip button{flex:none; width:20px; height:20px; border-radius:50%; border:none; background:rgba(255,255,255,.2); color:#fff; display:flex; align-items:center; justify-content:center;}
+.compare-tray-cta{width:100%;}
+@media (prefers-reduced-motion: reduce){ .compare-tray{transition:none;} }
 
 /* Minimum comfortable touch target for icon-only controls, without
    changing their visible size. */

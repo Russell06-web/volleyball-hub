@@ -63,8 +63,19 @@
 
 .form-grid{display:grid; grid-template-columns:1fr; gap:16px;}
 .field{display:flex; flex-direction:column; gap:7px; font-size:12.5px; font-weight:700; color:var(--text-muted);}
-.field input, .field textarea{font-family:inherit; font-size:13.5px; font-weight:500; color:var(--text); background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md); padding:11px 13px; resize:vertical;}
-.field input:focus, .field textarea:focus{outline:none; border-color:var(--primary);}
+.field input, .field textarea, .field select{font-family:inherit; font-size:13.5px; font-weight:500; color:var(--text); background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md); padding:11px 13px; resize:vertical;}
+.field input:focus, .field textarea:focus, .field select:focus{outline:none; border-color:var(--primary);}
+
+.wizard-toggle-row{margin:2px 0 18px;}
+
+.position-add-row{display:flex; gap:8px;}
+.position-add-row select{flex:2; min-width:0; font-family:inherit; font-size:13px; color:var(--text); background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md); padding:10px;}
+.position-add-row input{flex:1; min-width:0; font-family:inherit; font-size:13px; color:var(--text); background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md); padding:10px;}
+.position-add-row .btn-secondary{flex:none;}
+.position-need-list{display:flex; flex-direction:column; gap:6px; margin-top:10px;}
+.position-need-list li{display:flex; align-items:center; justify-content:space-between; gap:10px; background:var(--sand); border-radius:var(--r-md); padding:8px 10px; font-size:12.5px; font-weight:600; color:var(--text);}
+
+.wizard-preview{margin-top:10px;}
 
 .wizard-cta{justify-content:flex-end;}
 .wizard-cta .btn-secondary{flex:none; padding-inline:20px;}

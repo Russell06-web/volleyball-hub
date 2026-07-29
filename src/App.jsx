@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import { useEffect } from 'react'
 import Icons from './components/Icons'
 import Toast from './components/Toast'
+import CompareTray from './components/CompareTray'
 import { ToastProvider } from './context/ToastContext'
 import { BookingsProvider } from './context/BookingsContext'
 import { PreferencesProvider } from './context/PreferencesContext'
@@ -9,6 +10,8 @@ import { FavoritesProvider } from './context/FavoritesContext'
 import { HistoryProvider } from './context/HistoryContext'
 import { ProfileProvider } from './context/ProfileContext'
 import { EventsProvider } from './context/EventsContext'
+import { CompareProvider } from './context/CompareContext'
+import { SavedSearchesProvider } from './context/SavedSearchesContext'
 import Explore from './pages/Explore'
 import EventDetail from './pages/EventDetail'
 import Bookings from './pages/Bookings'
@@ -16,6 +19,7 @@ import Favorites from './pages/Favorites'
 import History from './pages/History'
 import Profile from './pages/Profile'
 import Manage from './pages/Manage'
+import Compare from './pages/Compare'
 import NotFound from './pages/NotFound'
 
 function ScrollToTop() {
@@ -30,32 +34,38 @@ export default function App() {
       <ToastProvider>
         <ProfileProvider>
           <EventsProvider>
-            <PreferencesProvider>
-              <FavoritesProvider>
-                <HistoryProvider>
-                  <BookingsProvider>
-                    <Icons />
-                    <ScrollToTop />
-                    <Routes>
-                      {/* No real i18n dictionary exists yet, so the language
-                          onboarding screen was removed rather than kept as a
-                          choice that doesn't actually translate anything —
-                          see README.md's Future Roadmap. */}
-                      <Route path="/" element={<Navigate to="/explore" replace />} />
-                      <Route path="/explore" element={<Explore />} />
-                      <Route path="/event/:id" element={<EventDetail />} />
-                      <Route path="/bookings" element={<Bookings />} />
-                      <Route path="/favorites" element={<Favorites />} />
-                      <Route path="/history" element={<History />} />
-                      <Route path="/profile" element={<Profile />} />
-                      <Route path="/manage" element={<Manage />} />
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                    <Toast />
-                  </BookingsProvider>
-                </HistoryProvider>
-              </FavoritesProvider>
-            </PreferencesProvider>
+            <CompareProvider>
+              <SavedSearchesProvider>
+                <PreferencesProvider>
+                  <FavoritesProvider>
+                    <HistoryProvider>
+                      <BookingsProvider>
+                        <Icons />
+                        <ScrollToTop />
+                        <Routes>
+                          {/* No real i18n dictionary exists yet, so the language
+                              onboarding screen was removed rather than kept as a
+                              choice that doesn't actually translate anything —
+                              see README.md's Future Roadmap. */}
+                          <Route path="/" element={<Navigate to="/explore" replace />} />
+                          <Route path="/explore" element={<Explore />} />
+                          <Route path="/event/:id" element={<EventDetail />} />
+                          <Route path="/bookings" element={<Bookings />} />
+                          <Route path="/favorites" element={<Favorites />} />
+                          <Route path="/history" element={<History />} />
+                          <Route path="/profile" element={<Profile />} />
+                          <Route path="/manage" element={<Manage />} />
+                          <Route path="/compare" element={<Compare />} />
+                          <Route path="*" element={<NotFound />} />
+                        </Routes>
+                        <CompareTray />
+                        <Toast />
+                      </BookingsProvider>
+                    </HistoryProvider>
+                  </FavoritesProvider>
+                </PreferencesProvider>
+              </SavedSearchesProvider>
+            </CompareProvider>
           </EventsProvider>
         </ProfileProvider>
       </ToastProvider>

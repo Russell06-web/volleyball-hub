@@ -12,7 +12,7 @@ const NAV_ITEMS = [
 
 export default function Header({
   title, subtitle, active, showSearch = false, avatarLink = true,
-  searchValue = '', onSearchChange, onSearchClear,
+  searchValue = '', onSearchChange, onSearchClear, onSearchCommit,
 }) {
   const { profile } = useProfile()
   const initial = profile.name.slice(0, 1) || '?'
@@ -23,6 +23,10 @@ export default function Header({
       e.preventDefault()
       onSearchClear?.()
       searchInputRef.current?.focus()
+      return
+    }
+    if (e.key === 'Enter') {
+      onSearchCommit?.()
     }
   }
 
@@ -55,6 +59,7 @@ export default function Header({
             value={searchValue}
             onChange={(e) => onSearchChange?.(e.target.value)}
             onKeyDown={handleKeyDown}
+            onBlur={() => onSearchCommit?.()}
           />
           {searchValue && (
             <button type="button" className="header-search-clear" aria-label="清除搜尋" onClick={handleClear}>

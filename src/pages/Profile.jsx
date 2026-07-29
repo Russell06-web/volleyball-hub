@@ -3,20 +3,30 @@ import { Link } from 'react-router-dom'
 import Header from '../components/Header'
 import BottomTabs from '../components/BottomTabs'
 import SiteFooter from '../components/SiteFooter'
-import FilterModal from '../components/FilterModal'
 import InfoDialog from '../components/InfoDialog'
 import EditProfileDialog from '../components/EditProfileDialog'
 import ResetDemoDataDialog from '../components/ResetDemoDataDialog'
 import { Icon } from '../components/Icons'
 import { useBookings } from '../context/BookingsContext'
 import { useFavorites } from '../context/FavoritesContext'
-import { usePreferences } from '../context/PreferencesContext'
+import { useCompare, MAX_COMPARE } from '../context/CompareContext'
 import { useProfile } from '../context/ProfileContext'
-import { matchesFilters } from '../components/FilterPanel'
+import { useSavedSearches, MAX_SAVED_SEARCHES } from '../context/SavedSearchesContext'
 import { useEvents } from '../context/EventsContext'
-import { CURRENT_USER_ID } from '../constants/taxonomy'
+import { CURRENT_USER_ID, FILTER_ALL, getCityLabel, getLevelLabel, SORTS } from '../constants/taxonomy'
+import { getPositionLabel } from '../constants/volleyballTaxonomy'
+import { getLabelForFilter } from '../utils/exploreFilterLabels'
+import { savedSearchToQueryString } from '../utils/savedSearches'
 import '../styles/profile.css'
 import '../styles/modals.css'
+
+function summarizeSavedSearch(saved) {
+  const parts = Object.entries(saved.filters).map(([key, value]) => getLabelForFilter(key, value))
+  if (saved.sort && saved.sort !== 'default') {
+    parts.push(SORTS.find((s) => s.value === saved.sort)?.label || saved.sort)
+  }
+  return parts.length > 0 ? parts.join('・') : '無篩選條件（僅排序）'
+}
 
 const GITHUB_REPO_URL = 'https://github.com/Russell06-web/volleyball-hub'
 
@@ -24,16 +34,38 @@ export default function Profile() {
   const { bookings } = useBookings()
   const { favorites } = useFavorites()
   const { profile } = useProfile()
-  const { filters, setFilter, resetFilters } = usePreferences()
+  const { compareIds } = useCompare()
   const { events } = useEvents()
+  const { savedSearches, renameSearch, deleteSearch } = useSavedSearches()
 
   const [editOpen, setEditOpen] = useState(false)
-  const [prefsOpen, setPrefsOpen] = useState(false)
   const [privacyOpen, setPrivacyOpen] = useState(false)
   const [aboutOpen, setAboutOpen] = useState(false)
   const [limitsOpen, setLimitsOpen] = useState(false)
   const [helpOpen, setHelpOpen] = useState(false)
   const [resetOpen, setResetOpen] = useState(false)
+  const [renamingId, setRenamingId] = useState(null)
+  const [renameDraft, setRenameDraft] = useState('')
+  const [renameError, setRenameError] = useState('')
+
+  function startRename(saved) {
+    setRenamingId(saved.id)
+    setRenameDraft(saved.name)
+    setRenameError('')
+  }
+  function cancelRename() {
+    setRenamingId(null)
+    setRenameError('')
+  }
+  function submitRename(id) {
+    const result = renameSearch(id, renameDraft)
+    if (!result.ok) {
+      setRenameError(result.message)
+      return
+    }
+    setRenamingId(null)
+    setRenameError('')
+  }
 
   useEffect(() => {
     document.title = '個人資料｜Volleyball Hub'
@@ -46,10 +78,6 @@ export default function Profile() {
   const hostedEventsCount = useMemo(
     () => events.filter((e) => e.ownerId === CURRENT_USER_ID).length,
     [events],
-  )
-  const filterResultCount = useMemo(
-    () => events.filter((e) => matchesFilters(e, filters)).length,
-    [events, filters],
   )
 
   return (
@@ -88,7 +116,7 @@ export default function Profile() {
             </Link>
             <Link to="/favorites">
               <Icon id="i-heart" size={19} />
-              <div><b>我的收藏</b><span>{favorites.length} 場已收藏的活動</span></div>
+              <div><b>收藏活動</b><span>{favorites.length} 場已收藏的活動</span></div>
               <Icon id="i-chevron" size={16} className="chev" />
             </Link>
             <Link to="/manage">
@@ -96,23 +124,90 @@ export default function Profile() {
               <div><b>我主辦的活動</b><span>{hostedEventsCount} 場你建立的活動</span></div>
               <Icon id="i-chevron" size={16} className="chev" />
             </Link>
+            <Link to="/compare">
+              <Icon id="i-compare" size={19} />
+              <div><b>活動比較</b><span>已選 {compareIds.length}/{MAX_COMPARE} 場活動</span></div>
+              <Icon id="i-chevron" size={16} className="chev" />
+            </Link>
           </section>
 
           <section className="settings-list">
-            <h3>使用偏好</h3>
-            <button type="button" onClick={() => setPrefsOpen(true)}>
-              <Icon id="i-filter" size={19} />
-              <div><b>活動偏好</b><span>影響探索頁的篩選與條件比對結果</span></div>
+            <h3>我的排球偏好</h3>
+            <button type="button" onClick={() => setEditOpen(true)}>
+              <Icon id="i-users" size={19} />
+              <div>
+                <b>排球偏好設定</b>
+                <span>
+                  位置：{getPositionLabel(profile.defaultPosition)}・
+                  程度：{profile.preferredLevel === FILTER_ALL ? '不限' : getLevelLabel(profile.preferredLevel)}・
+                  城市：{profile.preferredCity === FILTER_ALL ? '不限' : getCityLabel(profile.preferredCity)}
+                </span>
+              </div>
               <Icon id="i-chevron" size={16} className="chev" />
             </button>
-            <div className="settings-static-row">
-              <Icon id="i-info" size={19} />
-              <div><b>語言</b><span>繁體中文（其他語言介面規劃於 Future Roadmap）</span></div>
+            <button type="button" onClick={() => setEditOpen(true)}>
+              <Icon id="i-whistle" size={19} />
+              <div><b>快速加入設定</b><span>{profile.quickJoinEnabled ? '已啟用' : '尚未啟用'}——活動詳情頁的快速加入流程</span></div>
+              <Icon id="i-chevron" size={16} className="chev" />
+            </button>
+
+            <div className="saved-searches-section">
+              <h4>已儲存的探索條件 <span className="result-count">{savedSearches.length}/{MAX_SAVED_SEARCHES}</span></h4>
+              <p className="field-hint">此功能只會儲存篩選組合，不會發送新活動通知。</p>
+              {savedSearches.length === 0 ? (
+                <p className="empty-state">還沒有儲存任何探索條件。到<Link to="/explore" className="link-btn">探索活動</Link>套用篩選後，可以點「儲存這組條件」保存常用組合。</p>
+              ) : (
+                <ul className="saved-search-list">
+                  {savedSearches.map((saved) => (
+                    <li key={saved.id} className="saved-search-item">
+                      {renamingId === saved.id ? (
+                        <div className="saved-search-rename">
+                          <label className="field full">
+                            <span className="sr-only">重新命名</span>
+                            <input
+                              value={renameDraft}
+                              maxLength={20}
+                              autoFocus
+                              onChange={(e) => { setRenameDraft(e.target.value); setRenameError('') }}
+                              onKeyDown={(e) => { if (e.key === 'Enter') submitRename(saved.id) }}
+                            />
+                          </label>
+                          {renameError && <p className="field-error">{renameError}</p>}
+                          <div className="saved-search-actions">
+                            <button type="button" className="link-btn" onClick={cancelRename}>取消</button>
+                            <button type="button" className="btn-secondary sm" onClick={() => submitRename(saved.id)}>儲存名稱</button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="saved-search-info">
+                            <b>{saved.name}</b>
+                            <span>{summarizeSavedSearch(saved)}</span>
+                          </div>
+                          <div className="saved-search-actions">
+                            <Link to={`/explore${savedSearchToQueryString(saved)}`} className="link-btn">套用</Link>
+                            <button type="button" className="icon-btn sm ghost" aria-label={`重新命名${saved.name}`} onClick={() => startRename(saved)}>
+                              <Icon id="i-settings" size={14} />
+                            </button>
+                            <button type="button" className="icon-btn sm ghost danger" aria-label={`刪除${saved.name}`} onClick={() => deleteSearch(saved.id)}>
+                              <Icon id="i-trash" size={14} />
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </section>
 
           <section className="settings-list">
             <h3>關於與支援</h3>
+            <div className="settings-static-row">
+              <Icon id="i-info" size={19} />
+              <div><b>語言</b><span>繁體中文（其他語言介面規劃於 Future Roadmap）</span></div>
+            </div>
             <button type="button" onClick={() => setPrivacyOpen(true)}>
               <Icon id="i-shield" size={19} />
               <div><b>隱私與資料說明</b><span>資料存在哪裡、原型的資料邊界</span></div>
@@ -145,15 +240,6 @@ export default function Profile() {
       <BottomTabs active="profile" />
 
       <EditProfileDialog open={editOpen} onClose={() => setEditOpen(false)} />
-
-      <FilterModal
-        open={prefsOpen}
-        onClose={() => setPrefsOpen(false)}
-        filters={filters}
-        onChange={setFilter}
-        onReset={resetFilters}
-        resultCount={filterResultCount}
-      />
 
       <InfoDialog open={privacyOpen} onClose={() => setPrivacyOpen(false)} titleId="privacyTitle" title="隱私與資料說明">
         <div className="info-dialog-section">

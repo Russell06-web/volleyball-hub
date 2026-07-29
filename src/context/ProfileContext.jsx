@@ -14,6 +14,14 @@ const DEFAULT_PROFILE = {
   bio: '熱愛排球的運動愛好者，期待與大家一起享受排球的樂趣！',
   level: '高階',
   language: 'zh-Hant',
+  // Quick Join prefill data — deliberately starts empty/off rather than
+  // seeded with a fake phone number, since this is exactly the kind of
+  // field the Profile screen warns not to fill with anything real.
+  phone: '',
+  defaultPosition: 'universal',
+  preferredLevel: 'all',
+  preferredCity: 'all',
+  quickJoinEnabled: false,
 }
 
 const ProfileContext = createContext(null)

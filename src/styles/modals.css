@@ -41,6 +41,16 @@
 .register-mode-field{ margin-top:18px; margin-bottom:4px; }
 .team-remaining-hint{ margin:10px 0 0; }
 .register-form-grid{ margin-top:16px; }
+.register-position-field{ margin-top:14px; margin-bottom:4px; }
+.register-position-field .field-hint{ margin-top:8px; }
+
+/* Quick Join */
+.quick-join-summary{ margin-bottom:14px; }
+.quick-join-registrant{ margin-bottom:4px; }
+.quick-join-actions .link-btn{ flex:none; padding-inline:4px; }
+.profile-quickjoin-heading{ margin-top:22px; }
+.profile-quickjoin-intro{ margin:0 0 14px; line-height:1.6; }
+.profile-quickjoin-toggle{ margin-top:4px; }
 
 .btn-primary:disabled{ opacity:.45; cursor:not-allowed; box-shadow:none; }
 .btn-primary:disabled:hover{ background:var(--primary); }

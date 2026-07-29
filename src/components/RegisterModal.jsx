@@ -4,8 +4,11 @@ import { Icon } from './Icons'
 import { validateRegistrant } from '../utils/bookingValidation'
 import { getRemainingSlots, isWaitlistable } from '../utils/eventStatus'
 import { formatPrice } from '../utils/format'
+import { getPositionLabel } from '../constants/volleyballTaxonomy'
+import { orderedPositionChoices } from '../utils/positionShortage'
 
 const FIELD_ORDER = ['name', 'phone', 'teamName', 'teamSize', 'agree']
+const DEFAULT_POSITION = 'universal'
 
 export default function RegisterModal({ event, open, onClose, onConfirm }) {
   const [mode, setMode] = useState('individual')
@@ -13,6 +16,7 @@ export default function RegisterModal({ event, open, onClose, onConfirm }) {
   const [phone, setPhone] = useState('')
   const [teamName, setTeamName] = useState('')
   const [teamSize, setTeamSize] = useState(2)
+  const [preferredPosition, setPreferredPosition] = useState(DEFAULT_POSITION)
   const [agree, setAgree] = useState(false)
   const [errors, setErrors] = useState({})
 
@@ -28,6 +32,7 @@ export default function RegisterModal({ event, open, onClose, onConfirm }) {
     setPhone('')
     setTeamName('')
     setTeamSize(2)
+    setPreferredPosition(DEFAULT_POSITION)
     setAgree(false)
     setErrors({})
   }, [open, event?.id])
@@ -36,6 +41,7 @@ export default function RegisterModal({ event, open, onClose, onConfirm }) {
 
   const full = isWaitlistable(event)
   const remaining = getRemainingSlots(event)
+  const positionChoices = orderedPositionChoices(event.positionsNeeded)
 
   function submit() {
     const result = validateRegistrant({ mode, name, phone, agree, teamName, teamSize }, event)
@@ -52,6 +58,7 @@ export default function RegisterModal({ event, open, onClose, onConfirm }) {
       phone: phone.trim(),
       teamName: mode === 'team' ? teamName.trim() : undefined,
       teamSize: mode === 'team' ? Number(teamSize) : undefined,
+      preferredPosition: mode === 'individual' ? preferredPosition : null,
     })
   }
 
@@ -87,6 +94,30 @@ export default function RegisterModal({ event, open, onClose, onConfirm }) {
       {!full && mode === 'team' && (
         <p className="field-hint team-remaining-hint">目前尚有 {remaining} 個名額</p>
       )}
+
+      <div className="field full register-position-field">
+        <span>希望參加的位置</span>
+        {mode === 'team' ? (
+          <p className="field-hint">由隊伍自行安排，不需要在此指定個人位置。</p>
+        ) : (
+          <>
+            <div className="chip-row">
+              {positionChoices.map((p) => (
+                <button
+                  key={p.value}
+                  type="button"
+                  className={`chip${preferredPosition === p.value ? ' active' : ''}`}
+                  aria-pressed={preferredPosition === p.value}
+                  onClick={() => setPreferredPosition(p.value)}
+                >
+                  {getPositionLabel(p.value)}
+                </button>
+              ))}
+            </div>
+            <p className="field-hint">位置為偏好，實際安排由主辦方確認。</p>
+          </>
+        )}
+      </div>
 
       <div className="form-grid register-form-grid">
         <label className="field">

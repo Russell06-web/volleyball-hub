@@ -1,19 +1,27 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { Icon, LogoMark } from '../components/Icons'
 import RegisterModal from '../components/RegisterModal'
+import QuickJoinConfirmDialog from '../components/QuickJoinConfirmDialog'
+import PositionShortageBoard from '../components/PositionShortageBoard'
+import RegistrationReadinessSummary from '../components/RegistrationReadinessSummary'
 import { useBookings } from '../context/BookingsContext'
 import { usePreferences } from '../context/PreferencesContext'
 import { useFavorites } from '../context/FavoritesContext'
 import { useHistory } from '../context/HistoryContext'
 import { useEvents } from '../context/EventsContext'
+import { useProfile } from '../context/ProfileContext'
 import { useToast } from '../context/ToastContext'
+import { isQuickJoinReady } from '../utils/quickJoin'
 import { DIMENSION_LABEL, getMatchResult, MATCH_STATE_META } from '../utils/matchState'
 import { downloadEventIcs, hasCalendarDate } from '../utils/ics'
 import { formatPrice } from '../utils/format'
 import { getCityLabel, getGenderLabel, getLevelLabel, getPriceBracketLabel, getTypeLabel } from '../constants/taxonomy'
+import { getPlayStyleLabel } from '../constants/volleyballTaxonomy'
 import { EVENT_STATUS, EVENT_STATUS_META, getEventStatus, isWaitlistable } from '../utils/eventStatus'
 import { planRegistration } from '../services/registrationService'
+import { resolveBackTo } from '../utils/navigation'
+import { getEventInformationQuality, INFO_FIELD_LABELS } from '../utils/informationQuality'
 import '../styles/detail.css'
 import '../styles/modals.css'
 import '../styles/notfound.css'
@@ -47,6 +55,14 @@ function bannerSubtext(match) {
   return '有些條件是主辦方未限制或尚待確認，請詳閱活動資訊再決定'
 }
 
+function getCtaLabel({ alreadyActive, alreadyWaitlist, full, quickReady, withPrice }) {
+  if (alreadyActive) return '你已報名此活動'
+  if (alreadyWaitlist) return '你已加入候補'
+  if (full) return quickReady ? '快速加入候補' : '加入候補名單'
+  if (quickReady) return '快速加入'
+  return withPrice ? `立即報名 · ${withPrice}` : '立即報名'
+}
+
 function EventNotFound() {
   const navigate = useNavigate()
   useEffect(() => { document.title = '找不到此活動｜Volleyball Hub' }, [])
@@ -66,14 +82,19 @@ function EventNotFound() {
 export default function EventDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
+  const backTo = resolveBackTo(location.state?.from)
   const { addBooking, hasActiveBooking, hasWaitlistBooking, bookings } = useBookings()
   const { filters } = usePreferences()
   const { isFavorite, toggleFavorite } = useFavorites()
   const { recordView } = useHistory()
   const { getEventById, updateEvent } = useEvents()
+  const { profile } = useProfile()
   const { showToast } = useToast()
   const [modalOpen, setModalOpen] = useState(false)
+  const [quickJoinOpen, setQuickJoinOpen] = useState(false)
   const [reasonsOpen, setReasonsOpen] = useState(false)
+  const [infoDetailOpen, setInfoDetailOpen] = useState(false)
 
   const event = getEventById(id)
 
@@ -98,6 +119,11 @@ export default function EventDetail() {
   const alreadyActive = hasActiveBooking(event.id)
   const alreadyWaitlist = hasWaitlistBooking(event.id)
   const hasHighlights = event.hasInsurance || event.hasCoach || event.playStyle || (event.features && event.features.length > 0)
+  const showPositionBoard = !cancelled && !completed && !full
+  const infoQuality = getEventInformationQuality(event)
+  const quickReady = isQuickJoinReady(profile)
+  const ctaLabelBase = getCtaLabel({ alreadyActive, alreadyWaitlist, full, quickReady })
+  const ctaLabelWithPrice = getCtaLabel({ alreadyActive, alreadyWaitlist, full, quickReady, withPrice: priceLabel })
 
   async function handleShare() {
     const shareData = { title: event.title, text: `${event.title}・${event.date}`, url: window.location.href }
@@ -124,9 +150,19 @@ export default function EventDetail() {
   function handleCtaClick() {
     if (alreadyActive) { showToast('你已報名此活動'); return }
     if (alreadyWaitlist) { showToast('你已加入候補'); return }
+    if (quickReady) setQuickJoinOpen(true)
+    else setModalOpen(true)
+  }
+
+  function handleEditFullForm() {
+    setQuickJoinOpen(false)
     setModalOpen(true)
   }
 
+  // Shared by both RegisterModal and QuickJoinConfirmDialog — Quick Join
+  // only skips re-typing name/phone/position, it never gets its own copy
+  // of the registration business logic. Same planRegistration call, same
+  // duplicate/waitlist/capacity rules, same failure messages either way.
   function handleConfirm(registrant) {
     const plan = planRegistration(event, bookings, registrant)
     if (!plan.ok) {
@@ -141,6 +177,7 @@ export default function EventDetail() {
       registrant,
     })
     setModalOpen(false)
+    setQuickJoinOpen(false)
     showToast(plan.bookingStatus === 'waitlist' ? '已加入候補名單' : '報名成功')
     navigate('/bookings')
   }
@@ -148,7 +185,7 @@ export default function EventDetail() {
   return (
     <>
       <header className="detail-header">
-        <Link to="/explore" className="icon-btn" aria-label="返回探索頁"><Icon id="i-back" size={19} /></Link>
+        <Link to={backTo} className="icon-btn" aria-label="返回上一頁"><Icon id="i-back" size={19} /></Link>
         <span>活動詳情</span>
         <div className="header-actions">
           <button
@@ -234,7 +271,39 @@ export default function EventDetail() {
               <li><Icon id="i-info" size={18} /><div><b>活動費用</b><span>{priceLabel}</span></div></li>
               <li><Icon id="i-shield" size={18} /><div><b>付款方式</b><span>{event.price === 0 ? '無需付款' : (event.paymentMethod || '現場付款')}</span></div></li>
             </ul>
+
+            {infoQuality.state !== 'complete' && (
+              <div className={`info-quality-status ${infoQuality.state}`}>
+                <div className="info-quality-status-row">
+                  <Icon id="i-info" size={16} />
+                  <span>{infoQuality.label}</span>
+                  <button
+                    type="button"
+                    className="link-btn"
+                    onClick={() => setInfoDetailOpen((v) => !v)}
+                    aria-expanded={infoDetailOpen}
+                    aria-controls="infoQualityDetail"
+                  >
+                    {infoDetailOpen ? '收合' : '查看缺少的資訊'}
+                  </button>
+                </div>
+                {infoDetailOpen && (
+                  <div id="infoQualityDetail" className="info-quality-detail">
+                    <ul>
+                      {infoQuality.missingFields.map((key) => <li key={key}>{INFO_FIELD_LABELS[key]}</li>)}
+                    </ul>
+                    <p className="field-hint">
+                      {infoQuality.state === 'needsInfo'
+                        ? '以上是主辦方尚未提供、可能影響你判斷是否報名的重要資訊，建議先與主辦方確認。'
+                        : '以上是主辦方尚未補充的細節，不影響報名，僅供參考。'}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
           </section>
+
+          <RegistrationReadinessSummary event={event} />
 
           {hasHighlights && (
             <section>
@@ -242,13 +311,15 @@ export default function EventDetail() {
               <div className="highlight-grid">
                 {event.hasInsurance && <div className="highlight blue"><Icon id="i-shield" size={20} /><b>保險保障</b><span>含活動期間保險</span></div>}
                 {event.hasCoach && <div className="highlight green"><Icon id="i-whistle" size={20} /><b>專業教練</b><span>現場指導</span></div>}
-                {event.playStyle && <div className="highlight purple"><Icon id="i-users" size={20} /><b>活動風格</b><span>{event.playStyle}</span></div>}
+                {event.playStyle && <div className="highlight purple"><Icon id="i-users" size={20} /><b>活動風格</b><span>{getPlayStyleLabel(event.playStyle)}</span></div>}
                 {event.features?.map((f) => (
                   <div key={f} className="highlight orange"><Icon id="i-trend" size={20} /><b>{f}</b></div>
                 ))}
               </div>
             </section>
           )}
+
+          {showPositionBoard && <PositionShortageBoard positionsNeeded={event.positionsNeeded} />}
 
           <section>
             <h2>活動描述</h2>
@@ -272,7 +343,7 @@ export default function EventDetail() {
             <button className="btn-secondary full" disabled>{EVENT_STATUS_META[status].label}，無法報名</button>
           ) : (
             <button className="btn-primary full" onClick={handleCtaClick} disabled={alreadyActive || alreadyWaitlist}>
-              {alreadyActive ? '你已報名此活動' : alreadyWaitlist ? '你已加入候補' : full ? '加入候補名單' : '立即報名'}
+              {ctaLabelBase}
             </button>
           )}
           {hasCalendarDate(event) && !cancelled && (
@@ -280,20 +351,28 @@ export default function EventDetail() {
               <Icon id="i-calendar" size={15} />加入行事曆
             </button>
           )}
-          <Link to="/explore" className="btn-secondary full">返回首頁</Link>
+          <Link to={backTo} className="btn-secondary full">返回上一頁</Link>
         </aside>
       </div>
 
       {!cancelled && !completed && (
         <div className="sticky-cta detail-cta">
-          <Link to="/explore" className="btn-secondary">返回首頁</Link>
+          <Link to={backTo} className="btn-secondary">返回上一頁</Link>
           <button className="btn-primary" onClick={handleCtaClick} disabled={alreadyActive || alreadyWaitlist}>
-            {alreadyActive ? '你已報名此活動' : alreadyWaitlist ? '你已加入候補' : full ? '加入候補名單' : `立即報名 · ${priceLabel}`}
+            {ctaLabelWithPrice}
           </button>
         </div>
       )}
 
       <RegisterModal event={event} open={modalOpen} onClose={() => setModalOpen(false)} onConfirm={handleConfirm} />
+      <QuickJoinConfirmDialog
+        event={event}
+        profile={profile}
+        open={quickJoinOpen}
+        onClose={() => setQuickJoinOpen(false)}
+        onConfirm={handleConfirm}
+        onEditFull={handleEditFullForm}
+      />
     </>
   )
 }

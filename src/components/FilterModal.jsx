@@ -1,21 +1,55 @@
+import { useEffect, useState } from 'react'
 import Sheet from './Sheet'
 import { Icon } from './Icons'
 import FilterPanel from './FilterPanel'
+import { FILTER_ALL } from '../constants/taxonomy'
+import { FILTER_KEYS } from '../utils/exploreParams'
 
-export default function FilterModal({ open, onClose, filters, onChange, onReset, resultCount }) {
+const RESET_FILTERS = Object.fromEntries(FILTER_KEYS.map((key) => [key, FILTER_ALL]))
+
+// Mobile/tablet filtering uses a real draft model: opening the sheet
+// snapshots the current filters into local state, every tap in here only
+// changes that local copy, and nothing reaches Explore's actual URL/
+// filters until "套用篩選" is pressed. Closing (✕, backdrop, Escape —
+// all handled by Sheet) just discards the draft. This matches what the
+// "套用篩選" button already implied but didn't do — before this, every
+// tap inside the modal silently committed immediately.
+export default function FilterModal({ open, onClose, filters, onApply, getResultCountForFilters }) {
+  const [draft, setDraft] = useState(filters)
+
+  useEffect(() => {
+    if (open) setDraft(filters)
+  }, [open, filters])
+
+  function handleChange(key, value) {
+    setDraft((d) => ({ ...d, [key]: value }))
+  }
+  function handleReset() {
+    setDraft(RESET_FILTERS)
+  }
+  function handleApply() {
+    onApply(draft)
+    onClose()
+  }
+
+  const isFiltering = FILTER_KEYS.some((k) => draft[k] !== FILTER_ALL)
+  const resultCount = getResultCountForFilters(draft)
+
   return (
     <Sheet open={open} onClose={onClose} labelledBy="filterModalTitle">
       <div className="filter-modal-head">
         <h2 id="filterModalTitle">篩選活動</h2>
-        <button className="icon-btn" onClick={onClose} aria-label="關閉篩選"><Icon id="i-chevron" size={16} /></button>
+        <button className="icon-btn" onClick={onClose} aria-label="關閉篩選"><Icon id="i-close" size={16} /></button>
       </div>
       <FilterPanel
         heading=""
-        filters={filters}
-        onChange={onChange}
-        onApply={onClose}
-        onReset={onReset}
+        layout="modal"
+        filters={draft}
+        onChange={handleChange}
+        onApply={handleApply}
+        onReset={handleReset}
         resultCount={resultCount}
+        isFiltering={isFiltering}
         applyLabel={`套用篩選・共 ${resultCount} 場`}
       />
     </Sheet>

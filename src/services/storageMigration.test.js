@@ -40,6 +40,52 @@ describe('migrateEventRecord', () => {
     expect(migrated.city).toBe('taipei')
   })
 
+  it('gives a pre-Phase-2 record (no volleyball fields at all) safe defaults, inferred from its type where that makes sense', () => {
+    const indoorEvent = migrateEventRecord({ id: 'e1', title: '室內賽', type: 'indoor', capacity: 10 })
+    expect(indoorEvent.volleyballFormat).toBe('sixPlayer')
+    expect(indoorEvent.netHeight).toBe('unspecified')
+    expect(indoorEvent.courtSurface).toBe('unspecified') // genuinely unknown for indoor — not guessed
+    expect(indoorEvent.rotationRequired).toBe(false)
+    expect(indoorEvent.liberoAllowed).toBe(false)
+    expect(indoorEvent.soloJoinAllowed).toBe(true)
+    expect(indoorEvent.equipmentProvided).toEqual([])
+    expect(indoorEvent.positionsNeeded).toEqual([])
+    expect(indoorEvent.skillNotes).toBe('')
+
+    const beachEvent = migrateEventRecord({ id: 'e2', title: '沙灘賽', type: 'beach', capacity: 10 })
+    expect(beachEvent.volleyballFormat).toBe('beachTwoPlayer')
+    expect(beachEvent.courtSurface).toBe('sand') // definitionally true for beach, not a guess
+
+    const familyEvent = migrateEventRecord({ id: 'e3', title: '親子場', type: 'family', capacity: 10 })
+    expect(familyEvent.volleyballFormat).toBe('recreational')
+  })
+
+  it('converts an old raw-Chinese playStyle to its enum value, and drops an unrecognised one to empty', () => {
+    expect(migrateEventRecord({ id: 'e1', type: 'indoor', capacity: 10, playStyle: '競技對抗' }).playStyle).toBe('competitive')
+    expect(migrateEventRecord({ id: 'e2', type: 'indoor', capacity: 10, playStyle: 'not a real style' }).playStyle).toBe('')
+    expect(migrateEventRecord({ id: 'e3', type: 'indoor', capacity: 10, playStyle: 'casual' }).playStyle).toBe('casual')
+  })
+
+  it('keeps a record that already has valid volleyball fields untouched, and drops invalid positionsNeeded entries', () => {
+    const migrated = migrateEventRecord({
+      id: 'e1', title: '賽事', type: 'indoor', capacity: 10,
+      volleyballFormat: 'fourPlayer', netHeight: 'women', courtSurface: 'pu',
+      rotationRequired: true, liberoAllowed: true, soloJoinAllowed: false,
+      equipmentProvided: ['volleyball', 'not-a-real-item'],
+      positionsNeeded: [{ position: 'setter', count: 1 }, { position: 'bogus', count: 2 }, { position: 'middle', count: -3 }],
+      skillNotes: '建議有基本輪轉經驗',
+    })
+    expect(migrated.volleyballFormat).toBe('fourPlayer')
+    expect(migrated.netHeight).toBe('women')
+    expect(migrated.courtSurface).toBe('pu')
+    expect(migrated.rotationRequired).toBe(true)
+    expect(migrated.liberoAllowed).toBe(true)
+    expect(migrated.soloJoinAllowed).toBe(false)
+    expect(migrated.equipmentProvided).toEqual(['volleyball']) // invalid entry dropped
+    expect(migrated.positionsNeeded).toEqual([{ position: 'setter', count: 1 }, { position: 'middle', count: 0 }]) // invalid position dropped, negative count clamped to 0
+    expect(migrated.skillNotes).toBe('建議有基本輪轉經驗')
+  })
+
   it('drops an invalid record rather than throwing', () => {
     expect(migrateEventRecord(null)).toBeNull()
     expect(migrateEventRecord('not an object')).toBeNull()
@@ -62,7 +108,8 @@ describe('migrateBookingRecord', () => {
     const migrated = migrateBookingRecord(old)
     expect(migrated).toEqual({
       id: 'b1', eventId: 'e1', status: 'confirmed', participantCount: 1,
-      registrant: old.registrant, createdAt: migrated.createdAt, updatedAt: migrated.updatedAt, cancelReason: undefined,
+      registrant: { ...old.registrant, preferredPosition: null },
+      createdAt: migrated.createdAt, updatedAt: migrated.updatedAt, cancelReason: undefined,
     })
     expect(migrated.title).toBeUndefined()
     expect(migrated.loc).toBeUndefined()
@@ -70,6 +117,13 @@ describe('migrateBookingRecord', () => {
 
   it('drops legacy rows with eventId: null — nothing honest to migrate them into', () => {
     expect(migrateBookingRecord({ id: 'b2', eventId: null, title: '孤兒紀錄' })).toBeNull()
+  })
+
+  it('keeps a valid preferredPosition, and drops an invalid one back to null', () => {
+    const withValid = migrateBookingRecord({ id: 'b1', eventId: 'e1', registrant: { name: 'A', mode: 'individual', preferredPosition: 'libero' } })
+    expect(withValid.registrant.preferredPosition).toBe('libero')
+    const withInvalid = migrateBookingRecord({ id: 'b2', eventId: 'e1', registrant: { name: 'B', mode: 'individual', preferredPosition: 'not-real' } })
+    expect(withInvalid.registrant.preferredPosition).toBeNull()
   })
 })
 

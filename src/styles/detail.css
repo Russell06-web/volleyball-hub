@@ -39,6 +39,30 @@
 .info-list span{display:block; font-size:14.5px; font-weight:700;}
 .info-list a{font-size:12px; color:var(--primary); font-weight:700;}
 
+.info-quality-status{margin-top:14px; padding-top:14px; border-top:1px solid var(--border);}
+.info-quality-status-row{display:flex; align-items:center; gap:8px; font-size:12.5px; font-weight:700; color:var(--text-muted);}
+.info-quality-status.needsInfo .info-quality-status-row{color:var(--warn);}
+.info-quality-status-row svg{flex:none;}
+.info-quality-status-row .link-btn{margin-left:auto; font-size:12px; white-space:nowrap;}
+.info-quality-detail{margin-top:10px; padding:12px; background:var(--sand); border-radius:var(--r-md);}
+.info-quality-detail ul{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px;}
+.info-quality-detail li{font-size:11.5px; color:var(--text); background:var(--surface); border:1px solid var(--border); border-radius:var(--r-pill); padding:3px 10px;}
+.info-quality-detail .field-hint{margin:0;}
+
+.readiness-summary{background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); padding:16px; box-shadow:var(--shadow-card);}
+.readiness-list{display:flex; flex-direction:column; gap:12px;}
+.readiness-item{display:flex; align-items:flex-start; gap:10px;}
+.readiness-item svg{margin-top:2px; flex:none;}
+.readiness-item.ok svg{color:var(--success);}
+.readiness-item.check svg{color:var(--warn);}
+.readiness-item.unknown svg{color:var(--text-muted);}
+.readiness-item b{display:block; font-size:12.5px; font-weight:700;}
+.readiness-item span{display:block; font-size:12.5px; color:var(--text-muted); margin-top:1px;}
+.readiness-state{font-weight:700;}
+.readiness-item.ok .readiness-state{color:var(--success);}
+.readiness-item.check .readiness-state{color:var(--warn);}
+.readiness-item.unknown .readiness-state{color:var(--text-muted);}
+
 .highlight-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
 .highlight{border-radius:var(--r-md); padding:14px; display:flex; flex-direction:column; gap:6px;}
 .highlight b{font-size:13px;} .highlight span{font-size:11.5px; opacity:.8;}
@@ -48,6 +72,27 @@
 .highlight.orange{background:var(--primary-tint); color:var(--primary-dark);}
 
 .desc{font-size:13.5px; line-height:1.75; color:var(--text-muted); max-width:65ch;}
+
+/* position-shortage board — a simplified 3x2 "court" layout on wider
+   screens, wrapping chips on narrow ones (see PositionShortageBoard.jsx) */
+.position-board{background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); padding:16px; box-shadow:var(--shadow-card);}
+.position-board h2{font-size:14.5px; margin-bottom:12px;}
+.position-court{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:14px;}
+.position-board-text{font-size:13px; color:var(--text); margin:0 0 6px; line-height:1.6;}
+.position-board-disclaimer{font-size:11.5px; color:var(--text-muted); margin:0; line-height:1.5;}
+
+.position-chip{
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+  min-height:52px; border-radius:var(--r-md); font-size:12.5px; font-weight:700; padding:8px 6px; text-align:center;
+}
+.position-chip.filled{background:var(--sand); color:var(--text-muted); border:1px solid var(--border);}
+.position-chip.needed{background:var(--primary-tint); color:var(--primary-dark); border:1.5px dashed var(--primary);}
+.position-chip b{font-size:15px; font-weight:800;}
+
+@media (max-width: 479px){
+  .position-court{display:flex; flex-wrap:wrap; grid-template-columns:none;}
+  .position-chip{flex:1 1 30%; min-width:80px;}
+}
 
 .booking-card{display:none;}
 

@@ -57,4 +57,37 @@ describe('events seed data', () => {
       expect(title).not.toMatch(/^還缺|湊團中$/)
     })
   })
+
+  it('urgent (臨打) events always have a real positionsNeeded shortage to display', () => {
+    SEED_EVENTS.filter((e) => e.isUrgent).forEach((e) => {
+      const totalNeeded = e.positionsNeeded.reduce((sum, p) => sum + p.count, 0)
+      expect(totalNeeded).toBeGreaterThan(0)
+    })
+  })
+
+  it('family/recreational events have no competitive position requirements (empty array, not fabricated roles)', () => {
+    SEED_EVENTS.filter((e) => e.type === 'family').forEach((e) => {
+      expect(e.positionsNeeded).toEqual([])
+    })
+  })
+
+  it('every event has a volleyballFormat, and not every event uses the same one', () => {
+    const formats = new Set(SEED_EVENTS.map((e) => e.volleyballFormat))
+    expect(SEED_EVENTS.every((e) => !!e.volleyballFormat)).toBe(true)
+    expect(formats.size).toBeGreaterThan(1)
+  })
+
+  it('beach events always report courtSurface "sand" — definitionally true, not a guess', () => {
+    SEED_EVENTS.filter((e) => e.type === 'beach').forEach((e) => {
+      expect(e.courtSurface).toBe('sand')
+    })
+  })
+
+  it('positionsNeeded totals never exceed what is actually still needed (sanity against the seed data itself)', () => {
+    SEED_EVENTS.forEach((e) => {
+      const totalNeeded = e.positionsNeeded.reduce((sum, p) => sum + p.count, 0)
+      expect(totalNeeded).toBeLessThanOrEqual(e.capacity)
+      e.positionsNeeded.forEach((p) => expect(p.count).toBeGreaterThanOrEqual(0))
+    })
+  })
 })

@@ -5,18 +5,21 @@ import BottomTabs from '../components/BottomTabs'
 import SiteFooter from '../components/SiteFooter'
 import FilterPanel, { matchesFilters } from '../components/FilterPanel'
 import FilterModal from '../components/FilterModal'
+import SaveSearchDialog from '../components/SaveSearchDialog'
 import EventCard from '../components/EventCard'
 import { Icon } from '../components/Icons'
 import { useEvents } from '../context/EventsContext'
 import { usePreferences } from '../context/PreferencesContext'
 import { DEFAULT_FILTERS, EVENT_TYPES, FILTER_ALL, SECTION_VIEW, SORTS } from '../constants/taxonomy'
 import {
-  DEFAULT_EXPLORE_STATE, FILTER_KEYS, parseExploreParams, sanitizeExploreParams,
+  DEFAULT_EXPLORE_STATE, FILTER_KEYS, getPreferencesSyncPatch, parseExploreParams, sanitizeExploreParams,
 } from '../utils/exploreParams'
 import { getLabelForFilter } from '../utils/exploreFilterLabels'
+import { useSearchInput } from '../hooks/useSearchInput'
 import { matchesSearch } from '../utils/search'
 import { sortEvents } from '../utils/sortEvents'
 import { isPubliclyVisible } from '../utils/eventStatus'
+import { getAlternativeFilterSuggestions } from '../utils/alternativeFilters'
 import '../styles/explore.css'
 
 const QUICK_TYPES = [{ value: FILTER_ALL, label: '全部' }, ...EVENT_TYPES]
@@ -29,9 +32,16 @@ function getResultCountText(count, query, isFiltering) {
   return `共 ${count} 場活動`
 }
 
+function getResultsHeading(isSearching, isFiltering, query) {
+  if (isSearching && isFiltering) return '搜尋與篩選結果'
+  if (isSearching) return `「${query.trim()}」的搜尋結果`
+  return '篩選結果'
+}
+
 export default function Explore() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [filterOpen, setFilterOpen] = useState(false)
+  const [saveSearchOpen, setSaveSearchOpen] = useState(false)
   const { filters: storedFilters, setFilters: setStoredFilters, resetFilters: resetStoredFilters } = usePreferences()
   const { events } = useEvents()
   const seededRef = useRef(false)
@@ -77,14 +87,31 @@ export default function Explore() {
     return f
   }, [state])
 
-  // Filter/search/sort clicks build normal browser history (so "back"
-  // undoes one change at a time); typing in the search box replaces the
-  // current entry so every keystroke doesn't create its own history
-  // entry.
+  // EventDetail reads PreferencesContext directly for its own
+  // condition-match explanation — keep it following whatever Explore's
+  // URL actually says, so a shared link / back-forward / refresh doesn't
+  // leave the two disagreeing about what "the current filters" are. Never
+  // runs the other direction (Context never pushes into the URL here) and
+  // never fires when the URL carries no filter at all, so a bare
+  // /explore visit doesn't wipe out a previously saved preference.
+  useEffect(() => {
+    const patch = getPreferencesSyncPatch(searchParams, filters, storedFilters)
+    if (patch) setStoredFilters(patch)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams])
+
+  // Filter/sort/view-toggle clicks build normal browser history (so
+  // "back" undoes one change at a time); the search box replaces so
+  // keystrokes don't spam history — see useSearchInput below.
   function commit(patch, { push = false } = {}) {
     const next = sanitizeExploreParams({ ...state, ...patch })
     setSearchParams(next, { replace: !push })
   }
+
+  const { inputValue: searchInput, handleChange: handleSearchInputChange, handleCommitNow: commitSearchNow, handleClear: clearSearchInput } = useSearchInput(
+    query,
+    (value) => commit({ q: value, view: SECTION_VIEW.ALL }),
+  )
 
   function handleFilterChange(key, value) {
     // Changing what's actually being searched for should always return
@@ -100,8 +127,6 @@ export default function Explore() {
     commit({ ...cleared, view: SECTION_VIEW.ALL }, { push: true })
     resetStoredFilters()
   }
-  function handleQueryChange(value) { commit({ q: value, view: SECTION_VIEW.ALL }) }
-  function handleQueryClear() { commit({ q: '', view: SECTION_VIEW.ALL }) }
   function handleSortChange(value) { commit({ sort: value }, { push: true }) }
   function handleSectionView(view) { commit({ view }, { push: true }) }
   function resetSearchAndFilters() {
@@ -109,6 +134,20 @@ export default function Explore() {
     FILTER_KEYS.forEach((k) => { cleared[k] = FILTER_ALL })
     commit({ ...cleared, view: SECTION_VIEW.ALL }, { push: true })
     resetStoredFilters()
+  }
+
+  // FilterModal owns its own draft state and only calls this once, when
+  // "套用篩選" is pressed — so opening the sheet, poking around, and
+  // closing it never touches the real URL, and a genuine apply is always
+  // exactly one history entry. If the draft came back identical to what's
+  // already live, skip the commit entirely rather than push a no-op.
+  function handleApplyFilters(draftFilters) {
+    const changed = FILTER_KEYS.some((k) => draftFilters[k] !== filters[k])
+    if (changed) {
+      commit({ ...draftFilters, view: SECTION_VIEW.ALL }, { push: true })
+      setStoredFilters({ ...filters, ...draftFilters })
+    }
+    setFilterOpen(false)
   }
 
   const isFiltering = FILTER_KEYS.some((k) => filters[k] !== FILTER_ALL)
@@ -121,12 +160,32 @@ export default function Explore() {
   // that state if someone follows an old link/booking to it).
   const visibleEvents = useMemo(() => events.filter((e) => isPubliclyVisible(e)), [events])
 
+  function getResultCountForFilters(candidateFilters) {
+    return visibleEvents.filter((e) => matchesFilters(e, candidateFilters) && matchesSearch(e, query)).length
+  }
+  // Same idea as getResultCountForFilters, but for a full candidate
+  // explore state (including q) — what getAlternativeFilterSuggestions
+  // needs to check whether relaxing one dimension would really help.
+  function getCountForExploreState(candidateState) {
+    return visibleEvents.filter((e) => matchesFilters(e, candidateState) && matchesSearch(e, candidateState.q ?? '')).length
+  }
+
   const searchedAndFiltered = useMemo(
     () => visibleEvents.filter((e) => matchesFilters(e, filters) && matchesSearch(e, query)),
     [visibleEvents, filters, query],
   )
   const sorted = useMemo(() => sortEvents(searchedAndFiltered, sort), [searchedAndFiltered, sort])
   const totalCount = sorted.length
+
+  const alternativeSuggestions = useMemo(() => {
+    if (totalCount !== 0) return []
+    return getAlternativeFilterSuggestions(state, totalCount, getCountForExploreState)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [totalCount, state, visibleEvents])
+
+  function applySuggestion(patch) {
+    commit(patch, { push: true })
+  }
 
   // Homepage categorisation only applies when nothing is being searched
   // or filtered — and an event that's both isUrgent and isFeatured only
@@ -145,14 +204,15 @@ export default function Explore() {
         subtitle={isFiltering || isSearching ? '符合目前搜尋與篩選條件' : '發現精彩活動'}
         active="explore"
         showSearch
-        searchValue={query}
-        onSearchChange={handleQueryChange}
-        onSearchClear={handleQueryClear}
+        searchValue={searchInput}
+        onSearchChange={handleSearchInputChange}
+        onSearchClear={clearSearchInput}
+        onSearchCommit={commitSearchNow}
       />
 
       <div className="layout">
         <aside className="filter-sidebar" aria-label="篩選活動">
-          <FilterPanel filters={filters} onChange={handleFilterChange} onReset={handleResetFilters} resultCount={totalCount} />
+          <FilterPanel filters={filters} onChange={handleFilterChange} onReset={handleResetFilters} resultCount={totalCount} isFiltering={isFiltering} />
         </aside>
 
         <main className="content">
@@ -188,6 +248,7 @@ export default function Explore() {
                 </button>
               ))}
               <button type="button" className="active-filters-clear" onClick={handleResetFilters}>清除全部</button>
+              <button type="button" className="link-btn save-search-trigger" onClick={() => setSaveSearchOpen(true)}>儲存這組條件</button>
             </div>
           )}
 
@@ -207,19 +268,36 @@ export default function Explore() {
           </div>
 
           {totalCount === 0 ? (
-            <p className="empty-state" role="status">
-              {isSearching
-                ? `找不到符合「${query.trim()}」${isFiltering ? '與目前篩選條件' : ''}的活動。`
-                : '找不到符合目前篩選條件的活動。'}
+            <div className="empty-state-block" role="status">
+              <p className="empty-state">
+                {isSearching
+                  ? `找不到符合「${query.trim()}」${isFiltering ? '與目前篩選條件' : ''}的活動。`
+                  : '找不到符合目前篩選條件的活動。'}
+              </p>
+              {alternativeSuggestions.length > 0 && (
+                <ul className="alt-suggestions" aria-label="可以試試">
+                  {alternativeSuggestions.map((s) => (
+                    <li key={s.id}>
+                      <button type="button" className="alt-suggestion-btn" onClick={() => applySuggestion(s.patch)}>
+                        <span>{s.label}</span>
+                        <span className="alt-suggestion-count">{s.resultCount} 場</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
               <button type="button" className="link-btn" onClick={resetSearchAndFilters}>
                 {isSearching ? '清除搜尋及重置篩選' : '重置篩選'}
               </button>
-            </p>
+            </div>
           ) : !isBrowsingHome ? (
             // Searching or filtering collapses everything into a single
             // list — every matching event appears exactly once, with no
             // 精選/臨打/更多 split to keep straight.
             <section className="strip" aria-label="搜尋與篩選結果">
+              <div className="results-heading-row">
+                <h2>{getResultsHeading(isSearching, isFiltering, query)}</h2>
+              </div>
               <div className="event-grid">
                 {sorted.map((ev) => <EventCard key={ev.id} ev={ev} variant={ev.isUrgent ? 'urgent' : 'default'} />)}
               </div>
@@ -279,9 +357,13 @@ export default function Explore() {
         open={filterOpen}
         onClose={() => setFilterOpen(false)}
         filters={filters}
-        onChange={handleFilterChange}
-        onReset={handleResetFilters}
-        resultCount={totalCount}
+        onApply={handleApplyFilters}
+        getResultCountForFilters={getResultCountForFilters}
+      />
+      <SaveSearchDialog
+        open={saveSearchOpen}
+        onClose={() => setSaveSearchOpen(false)}
+        exploreState={state}
       />
     </>
   )

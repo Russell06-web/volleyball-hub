@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import Header from '../components/Header'
 import BottomTabs from '../components/BottomTabs'
 import SiteFooter from '../components/SiteFooter'
@@ -9,9 +9,12 @@ import { useBookings } from '../context/BookingsContext'
 import { useEvents } from '../context/EventsContext'
 import { useToast } from '../context/ToastContext'
 import { planCancelBooking } from '../services/registrationService'
-import { EVENT_STATUS, getEventStatus } from '../utils/eventStatus'
+import { EVENT_STATUS, getEventStatus, getRemainingSlots } from '../utils/eventStatus'
 import { formatPrice } from '../utils/format'
 import { getLevelLabel } from '../constants/taxonomy'
+import { getNetHeightLabel, getPositionLabel, getVolleyballFormatLabel } from '../constants/volleyballTaxonomy'
+import { getPositionShortageSummary } from '../utils/positionShortage'
+import { buildFromState } from '../utils/navigation'
 import '../styles/bookings.css'
 import '../styles/modals.css'
 
@@ -120,6 +123,13 @@ function BookingCard({ booking: b, event, onCancel, onReview }) {
   const meta = STATUS_META[b.status] || STATUS_META.pending
   const upcoming = b.status === 'pending' || b.status === 'confirmed' || b.status === 'waitlist'
   const eventCancelled = event && getEventStatus(event) === EVENT_STATUS.CANCELLED
+  const location = useLocation()
+  const linkState = buildFromState(location)
+  // Only individual registrations carry a real preference — team
+  // registrants share the team's own arrangement, which RegisterModal
+  // already stores as preferredPosition: null rather than a guessed value.
+  const preferredPosition = b.registrant?.mode !== 'team' && b.registrant?.preferredPosition ? b.registrant.preferredPosition : null
+  const shortage = event && upcoming && !eventCancelled && getRemainingSlots(event) > 0 ? getPositionShortageSummary(event) : null
 
   if (!event) {
     return (
@@ -145,6 +155,9 @@ function BookingCard({ booking: b, event, onCancel, onReview }) {
         <li><Icon id="i-calendar" size={14} />{event.date}</li>
         <li><Icon id="i-clock" size={14} />{event.startTime}{event.endTime ? `–${event.endTime}` : ''}</li>
         <li><Icon id="i-users" size={14} />{b.participantCount} 人{b.registrant?.mode === 'team' ? `（${b.registrant.teamName}）` : ''}</li>
+        <li><Icon id="i-shield" size={14} />{getNetHeightLabel(event.netHeight)}・{getVolleyballFormatLabel(event.volleyballFormat)}</li>
+        {preferredPosition && <li><Icon id="i-star" size={14} />位置偏好：{getPositionLabel(preferredPosition)}</li>}
+        {shortage && <li><Icon id="i-info" size={14} />主辦方回報：{shortage.text}</li>}
       </ul>
       <div className="organizer-row">
         <div><b>主辦單位</b><span>{event.organizerName || '—'}</span></div>
@@ -156,7 +169,7 @@ function BookingCard({ booking: b, event, onCancel, onReview }) {
       <div className="card-foot">
         <span className={`price${event.price === 0 ? ' free' : ''}`}>{formatPrice(event.price)}</span>
         <div className="card-foot-actions">
-          <Link to={`/event/${event.id}`} className="btn-secondary sm">查看詳情</Link>
+          <Link to={`/event/${event.id}`} state={linkState} className="btn-secondary sm">查看詳情</Link>
           {upcoming && !eventCancelled && (
             <button className="btn-cta danger" onClick={onCancel}><Icon id="i-back" size={13} />取消</button>
           )}

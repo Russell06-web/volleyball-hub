@@ -10,6 +10,8 @@ export const STORAGE_KEYS = {
   favorites: 'vh-favorites',
   history: 'vh-history',
   profile: 'vh-profile',
+  compare: 'vh-compare',
+  savedSearches: 'vh-saved-searches',
   version: 'vh-storage-version',
 }
 

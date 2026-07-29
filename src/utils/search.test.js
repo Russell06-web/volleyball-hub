@@ -9,7 +9,7 @@ const event = {
   city: 'taipei',
   address: '台北市松山區南京東路四段10號',
   organizerName: 'Northside Volleyball Club',
-  playStyle: '競技對抗',
+  playStyle: 'competitive',
 }
 
 describe('normalizeSearchQuery', () => {
@@ -59,5 +59,10 @@ describe('matchesSearch', () => {
 
   it('is insensitive to keyword order and extra whitespace between them', () => {
     expect(matchesSearch(event, '中階   台北')).toBe(true)
+  })
+
+  it('matches by playStyle label, not the internal enum value', () => {
+    expect(matchesSearch(event, '競技對抗')).toBe(true)
+    expect(matchesSearch(event, 'competitive')).toBe(false)
   })
 })

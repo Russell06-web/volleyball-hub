@@ -1,4 +1,5 @@
 import { getCityLabel, getLevelLabel, getTypeLabel } from '../constants/taxonomy'
+import { getPlayStyleLabel } from '../constants/volleyballTaxonomy'
 
 // trim + lowercase + collapse internal whitespace, so "  Taipei   Cup " and
 // "taipei cup" search the same way and a phone-keyboard double-space
@@ -30,7 +31,7 @@ export function matchesSearch(event, rawQuery) {
     getCityLabel(event.city),
     event.address,
     event.organizerName,
-    event.playStyle,
+    getPlayStyleLabel(event.playStyle),
   ]
     .filter(Boolean)
     .join(' ')

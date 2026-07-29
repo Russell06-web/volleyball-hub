@@ -1,10 +1,14 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { Icon } from './Icons'
 import { useFavorites } from '../context/FavoritesContext'
+import { useCompare } from '../context/CompareContext'
 import { formatPrice } from '../utils/format'
 import { formatEventDateLabel } from '../utils/date'
 import { getCityLabel, getLevelLabel } from '../constants/taxonomy'
-import { EVENT_STATUS, EVENT_STATUS_META, getEventStatus, getRemainingSlots } from '../utils/eventStatus'
+import { EVENT_STATUS, EVENT_STATUS_META, getEventStatus } from '../utils/eventStatus'
+import { buildFromState } from '../utils/navigation'
+import { getPositionShortageSummary } from '../utils/positionShortage'
+import { getEventInformationQuality } from '../utils/informationQuality'
 
 // Shared by Explore, Favorites, and History — one definition so a
 // favorite toggled in one place is styled identically everywhere it
@@ -28,8 +32,13 @@ export default function EventCard({ ev, variant = 'default' }) {
   const inactive = status === EVENT_STATUS.CANCELLED || status === EVENT_STATUS.COMPLETED
   const { isFavorite, toggleFavorite } = useFavorites()
   const favorited = isFavorite(ev.id)
+  const { isCompared, toggleCompare } = useCompare()
+  const compared = isCompared(ev.id)
   const isUrgent = variant === 'urgent'
-  const remaining = getRemainingSlots(ev)
+  const shortage = isUrgent && !inactive && !full ? getPositionShortageSummary(ev) : null
+  const infoQuality = getEventInformationQuality(ev)
+  const location = useLocation()
+  const linkState = buildFromState(location)
 
   const ctaLabel = inactive
     ? EVENT_STATUS_META[status].label
@@ -42,21 +51,31 @@ export default function EventCard({ ev, variant = 'default' }) {
       <div className="card-top">
         {isUrgent ? (
           <span className="badge live">
-            <i />急徵隊友{!inactive && !full && remaining > 0 ? `・還缺 ${remaining} 人` : ''}
+            <i />急徵隊友{shortage ? `・${shortage.text}` : ''}
           </span>
         ) : ev.isFeatured ? (
           <span className="badge featured">精選</span>
         ) : <span aria-hidden="true" />}
-        <button
-          className={`icon-btn ghost${favorited ? ' active-fav' : ''}`}
-          aria-label={favorited ? '取消收藏' : '收藏'}
-          aria-pressed={favorited}
-          onClick={() => toggleFavorite(ev.id)}
-        >
-          <Icon id="i-heart" size={16} />
-        </button>
+        <div className="card-actions">
+          <button
+            className={`icon-btn ghost${compared ? ' active-compare' : ''}`}
+            aria-label={compared ? '從比較中移除' : '加入比較'}
+            aria-pressed={compared}
+            onClick={() => toggleCompare(ev.id)}
+          >
+            <Icon id="i-compare" size={16} />
+          </button>
+          <button
+            className={`icon-btn ghost${favorited ? ' active-fav' : ''}`}
+            aria-label={favorited ? '取消收藏' : '收藏'}
+            aria-pressed={favorited}
+            onClick={() => toggleFavorite(ev.id)}
+          >
+            <Icon id="i-heart" size={16} />
+          </button>
+        </div>
       </div>
-      <Link to={`/event/${ev.id}`}><h3>{ev.title}</h3></Link>
+      <Link to={`/event/${ev.id}`} state={linkState}><h3>{ev.title}</h3></Link>
       <div className="tag-row">
         {ev.level !== 'open' && <span className="tag level">{getLevelLabel(ev.level)}</span>}
         <span className="tag type">{getCityLabel(ev.city)}</span>
@@ -68,12 +87,17 @@ export default function EventCard({ ev, variant = 'default' }) {
         <li><Icon id="i-calendar" size={14} />{formatEventDateLabel(ev.date)}・{ev.startTime}</li>
         <li><Icon id="i-users" size={14} />{ev.registeredCount} / {ev.capacity} 人</li>
       </ul>
+      {!inactive && infoQuality.state !== 'complete' && (
+        <p className={`info-quality-hint${infoQuality.state === 'needsInfo' ? ' needs-info' : ''}`}>
+          <Icon id="i-info" size={12} />{infoQuality.label}
+        </p>
+      )}
       <div className="card-foot">
         <span className={`price${ev.price === 0 ? ' free' : ''}`}>{formatPrice(ev.price)}</span>
         {inactive ? (
           <span className="btn-cta waitlist" aria-disabled="true">{ctaLabel}</span>
         ) : (
-          <Link to={`/event/${ev.id}`} className={`btn-cta${full ? ' waitlist' : ''}${isUrgent && !full ? ' urgent' : ''}`}>{ctaLabel}</Link>
+          <Link to={`/event/${ev.id}`} state={linkState} className={`btn-cta${full ? ' waitlist' : ''}${isUrgent && !full ? ' urgent' : ''}`}>{ctaLabel}</Link>
         )}
       </div>
     </article>

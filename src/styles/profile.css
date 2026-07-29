@@ -20,20 +20,38 @@
 .profile-card .btn-secondary:hover{background:rgba(255,255,255,.26);}
 
 .settings-list{background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); box-shadow:var(--shadow-card); overflow:hidden;}
-.settings-list h3{font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.06em; font-weight:700; padding:12px 16px 4px;}
-.settings-list a, .settings-list button{
+.settings-list h3{display:flex; align-items:center; justify-content:space-between; font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.06em; font-weight:700; padding:12px 16px 4px;}
+.settings-list h3 .result-count{margin-left:0; text-transform:none; letter-spacing:normal; font-weight:600;}
+
+.settings-list .saved-searches-section{border-top:1px solid var(--border); padding-top:2px;}
+.settings-list .saved-searches-section h4{display:flex; align-items:center; justify-content:space-between; font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.06em; font-weight:700; padding:12px 16px 4px; margin:0;}
+.settings-list .saved-searches-section h4 .result-count{margin-left:0; text-transform:none; letter-spacing:normal; font-weight:600;}
+.saved-searches-section .field-hint, .saved-searches-section .empty-state{padding:0 16px 12px; text-align:left; margin:0;}
+.saved-search-list{display:flex; flex-direction:column;}
+.saved-search-item{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 16px; border-top:1px solid var(--border);}
+.saved-search-info{display:flex; flex-direction:column; gap:1px; min-width:0;}
+.saved-search-info b{font-size:13.5px; font-weight:700; color:var(--text);}
+.saved-search-info span{font-size:11.5px; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.saved-search-actions{display:flex; align-items:center; gap:6px; flex:none;}
+.saved-search-rename{width:100%; display:flex; flex-direction:column; gap:6px;}
+.saved-search-rename .saved-search-actions{justify-content:flex-end;}
+/* Direct-child combinator on purpose — 已儲存的探索條件 nests its own
+   compact rename/delete/apply buttons inside this same .settings-list
+   section, and those must never inherit this row's full-width/icon+chev
+   layout (a descendant selector would leak into them). */
+.settings-list > a, .settings-list > button{
   display:flex; align-items:center; gap:12px; width:100%; padding:13px 16px; border-top:1px solid var(--border);
   font-size:14px; font-weight:700; color:var(--text); background:none; border-left:none; border-right:none; border-bottom:none;
   text-align:left; font-family:inherit; cursor:pointer;
 }
-.settings-list a:first-of-type, .settings-list button:first-of-type{border-top:none;}
-.settings-list a:hover, .settings-list button:hover{background:var(--sand);}
-.settings-list a svg:first-child, .settings-list button svg:first-child{color:var(--primary); flex:none;}
-.settings-list a div, .settings-list button div{display:flex; flex-direction:column; gap:1px; flex:1; min-width:0;}
-.settings-list a span, .settings-list button span{font-size:11.5px; color:var(--text-muted); font-weight:500;}
-.settings-list a .chev, .settings-list button .chev{color:var(--text-muted); flex:none;}
-.settings-list a.danger, .settings-list button.danger{color:var(--error);}
-.settings-list a.danger svg:first-child, .settings-list button.danger svg:first-child{color:var(--error);}
+.settings-list > a:first-of-type, .settings-list > button:first-of-type{border-top:none;}
+.settings-list > a:hover, .settings-list > button:hover{background:var(--sand);}
+.settings-list > a svg:first-child, .settings-list > button svg:first-child{color:var(--primary); flex:none;}
+.settings-list > a div, .settings-list > button div{display:flex; flex-direction:column; gap:1px; flex:1; min-width:0;}
+.settings-list > a span, .settings-list > button span{font-size:11.5px; color:var(--text-muted); font-weight:500;}
+.settings-list > a .chev, .settings-list > button .chev{color:var(--text-muted); flex:none;}
+.settings-list > a.danger, .settings-list > button.danger{color:var(--error);}
+.settings-list > a.danger svg:first-child, .settings-list > button.danger svg:first-child{color:var(--error);}
 
 .settings-static-row{
   display:flex; align-items:center; gap:12px; width:100%; padding:13px 16px; border-top:1px solid var(--border);
