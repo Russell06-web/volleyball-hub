@@ -66,7 +66,7 @@ export default function RegisterModal({ event, open, onClose, onConfirm }) {
     <Sheet open={open} onClose={onClose} labelledBy="registerTitle" wide>
       <div className="filter-modal-head">
         <h2 id="registerTitle">{full ? '加入候補名單' : '報名活動'}</h2>
-        <button className="icon-btn" onClick={onClose} aria-label="關閉"><Icon id="i-chevron" size={16} /></button>
+        <button className="icon-btn" onClick={onClose} aria-label="關閉"><Icon id="i-close" size={16} /></button>
       </div>
 
       {full && (

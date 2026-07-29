@@ -2,91 +2,121 @@
    Event detail page (event.html)
    =================================================================== */
 
-.detail-header{position:sticky; top:0; z-index:20; display:flex; align-items:center; gap:14px; padding:12px 16px; background:color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter:blur(10px); border-bottom:1px solid var(--border); justify-content:flex-start; font-weight:700; font-size:15px;}
+.detail-header{position:sticky; top:0; z-index:20; display:flex; align-items:center; gap:14px; padding:12px 16px; background:color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter:blur(10px); border-bottom:1px solid var(--border-default); justify-content:flex-start; font-weight:700; font-size:15px;}
 .detail-header .header-actions{margin-left:auto;}
 
 .detail-layout{display:flex; flex-direction:column; gap:0; padding:16px 16px 110px; flex:1;}
 .detail-main{display:flex; flex-direction:column; gap:22px; min-width:0;}
 .detail-main section h2{font-size:14.5px; margin-bottom:10px;}
 
-.match-banner{display:flex; align-items:center; gap:10px; background:var(--success-tint); color:var(--success); border-radius:var(--r-md); padding:12px 14px; flex-wrap:wrap;}
+.match-banner{display:flex; align-items:center; gap:10px; background:var(--success-soft); color:var(--success); border-radius:var(--r-md); padding:12px 14px; flex-wrap:wrap;}
 .match-banner b{display:block; font-size:13.5px;}
 .match-banner span{font-size:12px; opacity:.85;}
-.match-banner.wait{background:var(--info-tint); color:var(--info);}
-.match-banner.warn{background:var(--warn-tint); color:var(--warn);}
+.match-banner.wait{background:var(--info-soft); color:var(--info);}
+.match-banner.warn{background:var(--warning-soft); color:var(--warning);}
 
 .reason-toggle{margin-left:auto; color:inherit; white-space:nowrap; font-size:12px; font-weight:700; text-decoration:underline;}
 
-.reason-panel{background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); padding:16px; margin-top:-8px; box-shadow:var(--shadow-card);}
+.reason-panel{background:var(--surface); border:1px solid var(--border-default); border-radius:var(--r-lg); padding:16px; margin-top:-8px; box-shadow:var(--shadow-card);}
 .reason-panel h3{font-size:13px; margin-bottom:12px;}
 .reason-panel-list{display:flex; flex-direction:column; gap:12px; margin-bottom:14px;}
 .reason-panel-list li{display:flex; align-items:flex-start; gap:10px;}
 .reason-panel-list svg{margin-top:2px; flex:none;}
 .reason-panel-list svg.ok{color:var(--success);}
-.reason-panel-list svg.muted{color:var(--text-muted);}
+.reason-panel-list svg.muted{color:var(--text-secondary);}
 .reason-panel-list b{display:block; font-size:12.5px;}
-.reason-panel-list span{display:block; font-size:12px; color:var(--text-muted); margin-top:1px;}
-.reason-disclaimer{font-size:11.5px; color:var(--text-muted); line-height:1.6; border-top:1px solid var(--border); padding-top:12px; margin:0;}
+.reason-panel-list span{display:block; font-size:12px; color:var(--text-secondary); margin-top:1px;}
+.reason-disclaimer{font-size:11.5px; color:var(--text-secondary); line-height:1.6; border-top:1px solid var(--border-default); padding-top:12px; margin:0;}
 
-.detail-title-row{display:flex; align-items:flex-start; justify-content:space-between; gap:10px;}
-.detail-title-row h1{font-size:21px; margin-bottom:6px;}
+/* 活動摘要 — the one place EventDetail uses a solid colour band instead
+   of a white card, so the page opens with a clear "here's what/when/
+   where" moment before the detail cards start. Kept short (no big
+   photo, modest padding) so it never pushes the rest of the page below
+   the fold. */
+.detail-hero{background:var(--ink-navy); color:#fff; border-radius:var(--r-lg); padding:20px; margin-bottom:4px;}
+.detail-hero h1{font-size:21px; font-weight:800; letter-spacing:-.01em; margin-bottom:8px;}
+.detail-hero-when, .detail-hero-where{display:flex; align-items:center; gap:7px; font-size:13px; color:rgba(255,255,255,.85); margin:0 0 4px;}
+.detail-hero .tag-row{margin-top:12px;}
+@media (min-width: 640px){ .detail-hero{padding:26px 28px;} .detail-hero h1{font-size:24px;} }
 
-.info-card{background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); padding:16px; box-shadow:var(--shadow-card);}
+/* Three EventDetail cards share the same shell but each gets its own
+   left accent + tone, so "plain facts" (navy, neutral) / "check before
+   you register" (orange, actionable) / "court specifics" (teal, court
+   identity) read as different kinds of content at a glance, not one
+   block repeated three times. */
+.info-card{background:var(--surface); border:1px solid var(--border-default); border-left:4px solid var(--ink-navy); border-radius:var(--r-lg); padding:16px; box-shadow:var(--shadow-card);}
+.volleyball-spec-card{border-left-color:var(--court-teal);}
 .info-list{display:flex; flex-direction:column; gap:14px;}
 .info-list li{display:flex; align-items:flex-start; gap:12px;}
-.info-list svg{color:var(--primary); margin-top:2px; flex:none;}
-.info-list b{display:block; font-size:12px; color:var(--text-muted); font-weight:600;}
+.info-list svg{color:var(--brand-orange); margin-top:2px; flex:none;}
+.info-list b{display:block; font-size:12px; color:var(--text-secondary); font-weight:600;}
 .info-list span{display:block; font-size:14.5px; font-weight:700;}
-.info-list a{font-size:12px; color:var(--primary); font-weight:700;}
+.info-list a{font-size:12px; color:var(--brand-orange); font-weight:700;}
 
-.info-quality-status{margin-top:14px; padding-top:14px; border-top:1px solid var(--border);}
-.info-quality-status-row{display:flex; align-items:center; gap:8px; font-size:12.5px; font-weight:700; color:var(--text-muted);}
-.info-quality-status.needsInfo .info-quality-status-row{color:var(--warn);}
+.info-quality-status{margin-top:14px; padding-top:14px; border-top:1px solid var(--border-default);}
+.info-quality-status-row{display:flex; align-items:center; gap:8px; font-size:12.5px; font-weight:700; color:var(--text-secondary);}
+.info-quality-status.needsInfo .info-quality-status-row{color:var(--warning);}
 .info-quality-status-row svg{flex:none;}
 .info-quality-status-row .link-btn{margin-left:auto; font-size:12px; white-space:nowrap;}
-.info-quality-detail{margin-top:10px; padding:12px; background:var(--sand); border-radius:var(--r-md);}
+.info-quality-detail{margin-top:10px; padding:12px; background:var(--surface-subtle); border-radius:var(--r-md);}
 .info-quality-detail ul{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px;}
-.info-quality-detail li{font-size:11.5px; color:var(--text); background:var(--surface); border:1px solid var(--border); border-radius:var(--r-pill); padding:3px 10px;}
+.info-quality-detail li{font-size:11.5px; color:var(--text-primary); background:var(--surface); border:1px solid var(--border-default); border-radius:var(--r-pill); padding:3px 10px;}
 .info-quality-detail .field-hint{margin:0;}
 
-.readiness-summary{background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); padding:16px; box-shadow:var(--shadow-card);}
+.readiness-summary{background:var(--surface); border:1px solid var(--border-default); border-left:4px solid var(--brand-orange); border-radius:var(--r-lg); padding:16px; box-shadow:var(--shadow-card);}
+.readiness-summary h2{display:flex; align-items:center; gap:7px;}
+.readiness-summary h2::before{content:""; width:7px; height:7px; border-radius:50%; background:var(--brand-orange); flex:none;}
 .readiness-list{display:flex; flex-direction:column; gap:12px;}
 .readiness-item{display:flex; align-items:flex-start; gap:10px;}
 .readiness-item svg{margin-top:2px; flex:none;}
 .readiness-item.ok svg{color:var(--success);}
-.readiness-item.check svg{color:var(--warn);}
-.readiness-item.unknown svg{color:var(--text-muted);}
+.readiness-item.check svg{color:var(--warning);}
+.readiness-item.unknown svg{color:var(--text-secondary);}
 .readiness-item b{display:block; font-size:12.5px; font-weight:700;}
-.readiness-item span{display:block; font-size:12.5px; color:var(--text-muted); margin-top:1px;}
+.readiness-item span{display:block; font-size:12.5px; color:var(--text-secondary); margin-top:1px;}
 .readiness-state{font-weight:700;}
 .readiness-item.ok .readiness-state{color:var(--success);}
-.readiness-item.check .readiness-state{color:var(--warn);}
-.readiness-item.unknown .readiness-state{color:var(--text-muted);}
+.readiness-item.check .readiness-state{color:var(--warning);}
+.readiness-item.unknown .readiness-state{color:var(--text-secondary);}
 
 .highlight-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
 .highlight{border-radius:var(--r-md); padding:14px; display:flex; flex-direction:column; gap:6px;}
 .highlight b{font-size:13px;} .highlight span{font-size:11.5px; opacity:.8;}
-.highlight.blue{background:var(--info-tint); color:var(--info);}
-.highlight.green{background:var(--success-tint); color:var(--success);}
-.highlight.purple{background:var(--female-tint); color:var(--female);}
-.highlight.orange{background:var(--primary-tint); color:var(--primary-dark);}
+.highlight.blue{background:var(--info-soft); color:var(--info);}
+.highlight.green{background:var(--success-soft); color:var(--success);}
+.highlight.purple{background:var(--gender-female-soft); color:var(--gender-female);}
+.highlight.orange{background:var(--brand-orange-soft); color:var(--brand-orange-hover);}
 
-.desc{font-size:13.5px; line-height:1.75; color:var(--text-muted); max-width:65ch;}
+.desc{font-size:13.5px; line-height:1.75; color:var(--text-secondary); max-width:65ch;}
 
 /* position-shortage board — a simplified 3x2 "court" layout on wider
-   screens, wrapping chips on narrow ones (see PositionShortageBoard.jsx) */
-.position-board{background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); padding:16px; box-shadow:var(--shadow-card);}
-.position-board h2{font-size:14.5px; margin-bottom:12px;}
-.position-court{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:14px;}
-.position-board-text{font-size:13px; color:var(--text); margin:0 0 6px; line-height:1.6;}
-.position-board-disclaimer{font-size:11.5px; color:var(--text-muted); margin:0; line-height:1.5;}
+   screens, wrapping chips on narrow ones (see PositionShortageBoard.jsx).
+   Court-teal accent throughout, and the grid now sits on an actual
+   court-coloured floor with a dashed net line along the front-row edge —
+   the honesty disclaimer still does the real work of saying "this is
+   organiser-entered data", the visual here is just so it reads as a
+   court, not a generic chip grid. */
+.position-board{background:var(--surface); border:1px solid var(--border-default); border-left:4px solid var(--court-teal); border-radius:var(--r-lg); padding:16px; box-shadow:var(--shadow-card);}
+.position-board h2{font-size:14.5px; margin-bottom:12px; display:flex; align-items:center; gap:7px;}
+.position-board h2::before{content:""; width:7px; height:7px; border-radius:50%; background:var(--court-teal); flex:none;}
+.position-court{
+  position:relative; display:grid; grid-template-columns:repeat(3,1fr); gap:8px;
+  margin:0 0 14px; padding:20px 10px 10px; background:var(--court-teal-soft);
+  border:1px solid color-mix(in srgb, var(--court-teal) 30%, transparent); border-radius:var(--r-md);
+}
+.position-court::before{
+  content:""; position:absolute; top:9px; left:10px; right:10px; height:3px; border-radius:2px;
+  background:repeating-linear-gradient(90deg, var(--court-teal-dark) 0 6px, transparent 6px 11px);
+}
+.position-board-text{font-size:13px; color:var(--text-primary); margin:0 0 6px; line-height:1.6;}
+.position-board-disclaimer{font-size:11.5px; color:var(--text-secondary); margin:0; line-height:1.5;}
 
 .position-chip{
   display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
   min-height:52px; border-radius:var(--r-md); font-size:12.5px; font-weight:700; padding:8px 6px; text-align:center;
 }
-.position-chip.filled{background:var(--sand); color:var(--text-muted); border:1px solid var(--border);}
-.position-chip.needed{background:var(--primary-tint); color:var(--primary-dark); border:1.5px dashed var(--primary);}
+.position-chip.filled{background:var(--surface); color:var(--text-secondary); border:1px solid var(--border-default);}
+.position-chip.needed{background:var(--brand-orange-soft); color:var(--brand-orange-hover); border:1.5px dashed var(--brand-orange);}
 .position-chip b{font-size:15px; font-weight:800;}
 
 @media (max-width: 479px){
@@ -98,19 +128,20 @@
 
 @media (min-width: 640px){
   .detail-layout{padding:20px 24px 110px;}
-  .detail-title-row h1{font-size:24px;}
   .highlight-grid{grid-template-columns:repeat(4,1fr);}
 }
 
 @media (min-width: 1024px){
-  .detail-layout{flex-direction:row; align-items:flex-start; gap:32px; padding:28px 32px 60px; max-width:1120px; margin:0 auto;}
+  .detail-layout{flex-direction:row; align-items:flex-start; gap:32px; padding:28px 32px 60px; max-width:1220px; margin:0 auto;}
   .detail-main{flex:1;}
-  .booking-card{display:flex; flex-direction:column; gap:14px; width:300px; flex:none; position:sticky; top:88px; background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); padding:20px; box-shadow:var(--shadow-pop);}
-  .booking-price{display:flex; flex-direction:column; gap:2px; padding-bottom:12px; border-bottom:1px solid var(--border);}
+  .booking-card{display:flex; flex-direction:column; gap:14px; width:300px; flex:none; position:sticky; top:88px; background:var(--surface); border:1px solid var(--border-default); border-radius:var(--r-lg); padding:20px; box-shadow:var(--shadow-pop);}
+  .booking-card-actions{display:flex; gap:8px; justify-content:flex-end; margin:-6px -6px -8px 0;}
+  .booking-price{display:flex; flex-direction:column; gap:2px; padding-bottom:12px; border-bottom:1px solid var(--border-default);}
   .booking-price .price{font-size:26px;}
-  .booking-price span{font-size:12px; color:var(--text-muted);}
+  .booking-price span{font-size:12px; color:var(--text-secondary);}
   .booking-mini{display:flex; flex-direction:column; gap:8px;}
-  .booking-mini li{display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--text-muted);}
+  .booking-mini li{display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--text-secondary);}
+  .booking-mini li.shortage-line{color:var(--court-teal-dark); font-weight:600;}
   .sticky-cta.detail-cta{display:none;}
 }
 

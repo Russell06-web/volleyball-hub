@@ -3,28 +3,72 @@
    =================================================================== */
 
 :root{
-  --primary:#FF6B1A; --primary-dark:#E85A0C; --primary-tint:#FFE7D6;
-  --yellow:#FFC145; --navy:#1A2E45; --navy-soft:#3A4E68;
-  --bg:#FFFFFF; --sand:#F6F5F2; --surface:#FFFFFF;
-  --text:#2B2B2A; --text-muted:#68655F; --border:#E7E4DC;
-  --success:#4CAF50; --success-tint:#E7F5E8;
-  --error:#E53935; --error-tint:#FDEAEA;
-  --info:#007BFF; --info-tint:#E6F0FF;
-  --warn:#B8860B; --warn-tint:#FFF3D6;
-  --male:#3D7DD1; --male-tint:#E8F0FC;
-  --female:#D6588A; --female-tint:#FBEAF1;
-  --mixed:#1E9E8C; --mixed-tint:#E4F5F3;
-  --r-sm:8px; --r-md:14px; --r-lg:20px; --r-pill:999px;
+  /* ---- Brand: 都會運動俱樂部 — 橘（能量／行動）、深藍（結構／信任）、
+     青綠（球場／清新）。三色分工：橘=主要行動與強調、深藍=品牌與資訊架構、
+     青綠=比較功能與「這是排球場」的視覺提示，三者不互相取代。 ---- */
+  --brand-orange:#FF6B1A; --brand-orange-hover:#E85A0C; --brand-orange-soft:#FFE7D6;
+  --ink-navy:#1A2E45; --ink-navy-soft:#3A4E68;
+  --court-teal:#1E9E8C; --court-teal-dark:#167A6C; --court-teal-soft:#E4F5F3;
+  --accent-gold:#FFC145;
+
+  /* ---- Surfaces & text — --background is the page canvas (warm
+     off-white), --surface is the crisp white cards/sheets sit on top of,
+     --surface-subtle is for recessed panels *inside* a white card (a
+     meta box, an input's resting state) — three distinct depths instead
+     of one "paper" token doing all three jobs. ---- */
+  --background:#F6F5F2; --surface:#FFFFFF; --surface-subtle:#FAF9F6;
+  --text-primary:#2B2B2A; --text-secondary:#68655F; --text-disabled:#918E88;
+  --border-default:#E7E4DC; --border-strong:#CBC7BE;
+
+  /* ---- Status — always paired with an icon or explicit label
+     elsewhere in the markup, never the only signal. ---- */
+  --success:#2E8B57; --success-soft:#E7F5E8;
+  --warning:#A56A00; --warning-soft:#FFF3D6;
+  --danger:#D9363E; --danger-hover:#C62830; --danger-soft:#FDEAEA;
+  --info:#2563A6; --info-soft:#E6F0FF;
+
+  /* ---- Gender badges — a small, separate semantic set so "mixed"
+     reads as its own category rather than borrowing the court-teal
+     product accent used for Compare/active states. ---- */
+  --gender-male:#3D7DD1; --gender-male-soft:#E8F0FC;
+  --gender-female:#D6588A; --gender-female-soft:#FBEAF1;
+  --gender-mixed:#1E9E8C; --gender-mixed-soft:#E4F5F3;
+
+  --focus-ring:#1A2E45;
+
+  /* ---- Shape — cards/sheets get generous rounding; real buttons get a
+     confident-but-not-a-capsule radius; chips/tags/badges keep the pill.
+     This is deliberate: a pill shape should always mean "a token you can
+     remove or a state you're viewing", not "a thing you press". ---- */
+  --r-xs:6px; --r-sm:10px; --r-md:14px; --r-lg:20px; --r-xl:26px; --r-pill:999px;
+  --r-btn:14px;
+
   --shadow-card:0 1px 2px rgba(26,46,69,.05), 0 8px 20px -12px rgba(26,46,69,.18);
   --shadow-pop:0 16px 36px -14px rgba(26,46,69,.32);
   --header-h:64px;
   --tabbar-h:64px;
-  --font: -apple-system, "PingFang TC", "Noto Sans TC", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font: -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+
+  /* ---- Type scale — one shared set instead of ad hoc 11.5px/12.5px/
+     13.5px sprinkled per file. Existing component-level sizes are left
+     alone (rewriting every hand-tuned size across 9 files is out of
+     scope for this pass); this scale is what new/rebuilt pieces in this
+     pass — Hero, Featured card, Stepper, docs — are built from. ---- */
+  --text-xs:0.75rem; --text-sm:0.875rem; --text-md:1rem; --text-lg:1.125rem;
+  --text-xl:1.5rem; --text-2xl:2rem; --text-display:clamp(2rem, 5vw, 3.75rem);
+  --font-regular:400; --font-medium:500; --font-semibold:600; --font-bold:700; --font-extrabold:800;
+
+  /* ---- Spacing scale — same reasoning as the type scale above. ---- */
+  --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px; --space-5:20px;
+  --space-6:24px; --space-8:32px; --space-10:40px; --space-12:48px; --space-16:64px;
 }
 
 *{box-sizing:border-box;}
 html{-webkit-text-size-adjust:100%;}
-body{margin:0; font-family:var(--font); color:var(--text); background:var(--bg); min-height:100vh;}
+/* Warm off-white canvas, not stark white-on-white — cards/sheets sit on
+   this in crisp --surface white, which is what actually creates the
+   "floating card" depth cue instead of everything being one flat plane. */
+body{margin:0; font-family:var(--font); color:var(--text-primary); background:var(--background); min-height:100vh;}
 h1,h2,h3{text-wrap:balance; margin:0;}
 button{font-family:inherit; cursor:pointer;}
 ul{margin:0; padding:0; list-style:none;}
@@ -33,7 +77,14 @@ img{max-width:100%; display:block;}
 
 .sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;}
 
-:focus-visible{outline:2px solid var(--primary); outline-offset:2px;}
+/* A dedicated focus-ring token, not a reuse of --brand-orange — "this
+   has keyboard focus" and "this is the active/selected state" are
+   different signals and shouldn't share a color. Navy has strong
+   contrast against every light surface in the app; the one place it
+   doesn't (controls sitting inside a navy card — Toast, CompareTray) gets
+   an explicit white override below rather than relying on the default. */
+:focus-visible{outline:2px solid var(--focus-ring); outline-offset:2px;}
+.toast :focus-visible, .compare-tray :focus-visible{outline-color:#fff;}
 
 /* ================= HEADER ================= */
 .app-header{
@@ -42,36 +93,36 @@ img{max-width:100%; display:block;}
   padding:10px 16px; min-height:var(--header-h);
   background:color-mix(in srgb, var(--surface) 92%, transparent);
   backdrop-filter:blur(10px);
-  border-bottom:1px solid var(--border);
+  border-bottom:1px solid var(--border-default);
 }
 .brand{display:flex; align-items:center; gap:8px;}
 .brand-mark{display:flex; align-items:center; justify-content:center; flex:none;}
 .brand b{display:block; font-size:15px; line-height:1.2;}
-.brand small{color:var(--text-muted); font-size:11px;}
+.brand small{color:var(--text-secondary); font-size:11px;}
 .brand > div:last-child{margin-right:auto;}
 
 .nav-links{display:none; gap:4px; margin-right:auto;}
-.nav-links a{padding:8px 12px; border-radius:var(--r-pill); font-size:13.5px; font-weight:600; color:var(--text-muted);}
-.nav-links a[aria-current="page"]{color:var(--primary); background:var(--primary-tint);}
-.nav-links a:hover{color:var(--text);}
+.nav-links a{padding:8px 12px; border-radius:var(--r-pill); font-size:13.5px; font-weight:600; color:var(--text-secondary);}
+.nav-links a[aria-current="page"]{color:var(--brand-orange); background:var(--brand-orange-soft);}
+.nav-links a:hover{color:var(--text-primary);}
 
-.header-search{display:none; align-items:center; gap:8px; background:var(--sand); border:1px solid var(--border); border-radius:var(--r-pill); padding:8px 14px; color:var(--text-muted); flex:1; max-width:340px;}
-.header-search input{border:none; background:none; outline:none; font-size:13px; color:var(--text); width:100%; font-family:inherit;}
+.header-search{display:none; align-items:center; gap:8px; background:var(--surface-subtle); border:1px solid var(--border-default); border-radius:var(--r-pill); padding:8px 14px; color:var(--text-secondary); flex:1; max-width:340px;}
+.header-search input{border:none; background:none; outline:none; font-size:13px; color:var(--text-primary); width:100%; font-family:inherit;}
 .header-search input::-webkit-search-cancel-button{display:none;}
-.header-search-clear{flex:none; width:22px; height:22px; border-radius:50%; border:none; background:var(--border); color:var(--text-muted); display:flex; align-items:center; justify-content:center;}
-.header-search-clear:hover{background:var(--text-muted); color:#fff;}
+.header-search-clear{flex:none; width:22px; height:22px; border-radius:50%; border:none; background:var(--border-default); color:var(--text-secondary); display:flex; align-items:center; justify-content:center;}
+.header-search-clear:hover{background:var(--text-secondary); color:#fff;}
 
 .header-actions{display:flex; align-items:center; gap:8px; margin-left:auto;}
-.icon-btn{width:36px; height:36px; border-radius:50%; border:1px solid var(--border); background:var(--surface); color:var(--text); display:flex; align-items:center; justify-content:center; flex:none;}
-.icon-btn.ghost{border-color:transparent; background:var(--sand);}
-.icon-btn.ghost.active-fav{color:var(--primary); background:var(--primary-tint);}
-.icon-btn.ghost.active-compare{color:var(--mixed); background:var(--mixed-tint);}
+.icon-btn{width:36px; height:36px; border-radius:50%; border:1px solid var(--border-default); background:var(--surface); color:var(--text-primary); display:flex; align-items:center; justify-content:center; flex:none;}
+.icon-btn.ghost{border-color:transparent; background:var(--surface-subtle);}
+.icon-btn.ghost.active-fav{color:var(--brand-orange); background:var(--brand-orange-soft);}
+.icon-btn.ghost.active-compare{color:var(--court-teal); background:var(--court-teal-soft);}
 .icon-btn.sm{width:30px; height:30px;}
 .card-actions{display:flex; align-items:center; gap:6px;}
-.icon-btn.danger{color:var(--error); border-color:var(--error-tint); background:var(--error-tint);}
-.icon-btn.danger:hover{border-color:var(--error);}
-.icon-btn:hover{border-color:var(--primary); color:var(--primary);}
-.avatar{width:36px; height:36px; border-radius:50%; background:var(--primary); color:#fff; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; flex:none;}
+.icon-btn.danger{color:var(--danger); border-color:var(--danger-soft); background:var(--danger-soft);}
+.icon-btn.danger:hover{border-color:var(--danger);}
+.icon-btn:hover{border-color:var(--brand-orange); color:var(--brand-orange);}
+.avatar{width:36px; height:36px; border-radius:50%; background:var(--brand-orange); color:#fff; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; flex:none;}
 
 @media (min-width: 640px){
   .app-header{padding:12px 24px;}
@@ -88,42 +139,49 @@ img{max-width:100%; display:block;}
   display:grid; grid-template-columns:repeat(4,1fr);
   background:color-mix(in srgb, var(--surface) 94%, transparent);
   backdrop-filter:blur(10px);
-  border-top:1px solid var(--border);
+  border-top:1px solid var(--border-default);
   padding:8px 4px calc(8px + env(safe-area-inset-bottom));
 }
-.bottom-tabs a{display:flex; flex-direction:column; align-items:center; gap:3px; color:var(--text-muted); font-size:10.5px; font-weight:700; padding:6px 0; border-radius:12px;}
-.bottom-tabs a[aria-current="page"]{color:var(--primary);}
+.bottom-tabs a{display:flex; flex-direction:column; align-items:center; gap:3px; color:var(--text-secondary); font-size:10.5px; font-weight:700; padding:6px 0 5px; margin:0 4px; border-radius:var(--r-md); transition:background-color .15s ease;}
+.bottom-tabs a[aria-current="page"]{color:var(--brand-orange); background:var(--brand-orange-soft);}
 @media (min-width: 1024px){ .bottom-tabs{display:none;} }
 
-/* ================= BUTTONS ================= */
-.btn-primary{background:var(--primary); color:#fff; border:none; padding:12px 18px; border-radius:var(--r-pill); font-weight:700; font-size:14px; box-shadow:0 8px 18px -8px color-mix(in srgb, var(--primary) 70%, transparent);}
-.btn-primary:hover{background:var(--primary-dark);}
-.btn-secondary{background:var(--surface); color:var(--text); border:1px solid var(--border); padding:12px 18px; border-radius:var(--r-pill); font-weight:700; font-size:14px;}
-.btn-secondary:hover{border-color:var(--text-muted);}
+/* ================= BUTTONS =================
+   Deliberately NOT var(--r-pill) — a rounded-rectangle radius keeps
+   "things you press" visually distinct from "chips/badges you're
+   reading" (which do stay full pills below). Same radius language as
+   input fields and cards, just tighter. */
+.btn-primary{background:var(--brand-orange); color:#fff; border:none; padding:12px 20px; border-radius:var(--r-btn); font-weight:700; font-size:14px; box-shadow:0 8px 18px -8px color-mix(in srgb, var(--brand-orange) 70%, transparent);}
+.btn-primary:hover{background:var(--brand-orange-hover);}
+.btn-secondary{background:var(--surface); color:var(--text-primary); border:1px solid var(--border-default); padding:12px 20px; border-radius:var(--r-btn); font-weight:700; font-size:14px;}
+.btn-secondary:hover{border-color:var(--text-secondary);}
 .btn-secondary:disabled{opacity:.55; cursor:not-allowed;}
-.btn-secondary:disabled:hover{border-color:var(--border);}
-.btn-dark{background:var(--navy); color:#fff; border:none; padding:13px 18px; border-radius:var(--r-pill); font-weight:700; font-size:14px; margin-bottom:16px;}
-.btn-dark:hover{background:var(--navy-soft);}
+.btn-secondary:disabled:hover{border-color:var(--border-default);}
+.btn-dark{background:var(--ink-navy); color:#fff; border:none; padding:13px 20px; border-radius:var(--r-btn); font-weight:700; font-size:14px; margin-bottom:16px;}
+.btn-dark:hover{background:var(--ink-navy-soft);}
 .full{width:100%;}
 
-.link-btn{background:none; border:none; color:var(--primary); font-weight:700; font-size:12.5px; cursor:pointer;}
+.link-btn{background:none; border:none; color:var(--brand-orange); font-weight:700; font-size:12.5px; cursor:pointer;}
 .link-btn:hover{text-decoration:underline;}
 
-.btn-cta{background:var(--primary); color:#fff; border:none; padding:8px 16px; border-radius:var(--r-pill); font-weight:700; font-size:12.5px;}
-.btn-cta:hover{background:var(--primary-dark);}
-.btn-cta.urgent{background:var(--error);}
-.btn-cta.urgent:hover{background:#C62828;}
-.btn-cta.danger{background:var(--error); display:inline-flex; align-items:center; gap:4px;}
-.btn-cta.danger:hover{background:#C62828;}
+.btn-cta{background:var(--brand-orange); color:#fff; border:none; padding:9px 18px; border-radius:var(--r-sm); font-weight:700; font-size:12.5px;}
+.btn-cta:hover{background:var(--brand-orange-hover);}
+.btn-cta.urgent{background:var(--danger);}
+.btn-cta.urgent:hover{background:var(--danger-hover);}
+.btn-cta.danger{background:var(--danger); display:inline-flex; align-items:center; gap:4px;}
+.btn-cta.danger:hover{background:var(--danger-hover);}
 .btn-cta.danger svg{transform:rotate(45deg);}
 .btn-secondary.sm{padding:8px 14px; font-size:12.5px;}
 
-/* ================= CHIPS ================= */
-.chip{border:1px solid var(--border); background:var(--surface); color:var(--text); padding:8px 16px; border-radius:var(--r-pill); font-size:13px; font-weight:600; white-space:nowrap;}
-.chip.primary.active{background:var(--primary); border-color:var(--primary); color:#fff;}
-.chip.dark.active{background:var(--navy); border-color:var(--navy); color:#fff;}
-.chip.active{background:var(--navy); border-color:var(--navy); color:#fff;}
-.chip.warn.active{background:var(--warn); border-color:var(--warn); color:#fff;}
+/* ================= CHIPS =================
+   Chips/tags/badges keep the full pill — they represent a token, filter,
+   or state you're scanning, never a primary action, so the shape
+   language stays consistently separate from buttons above. */
+.chip{border:1px solid var(--border-default); background:var(--surface); color:var(--text-primary); padding:8px 16px; border-radius:var(--r-pill); font-size:13px; font-weight:600; white-space:nowrap;}
+.chip.primary.active{background:var(--brand-orange); border-color:var(--brand-orange); color:#fff;}
+.chip.dark.active{background:var(--ink-navy); border-color:var(--ink-navy); color:#fff;}
+.chip.active{background:var(--ink-navy); border-color:var(--ink-navy); color:#fff;}
+.chip.warn.active{background:var(--warning); border-color:var(--warning); color:#fff;}
 .chip.ok.active{background:var(--success); border-color:var(--success); color:#fff;}
 .chip.wait.active{background:var(--info); border-color:var(--info); color:#fff;}
 .chip.full{width:100%; text-align:left;}
@@ -132,51 +190,91 @@ img{max-width:100%; display:block;}
 
 /* ================= BADGES / TAGS ================= */
 .badge{display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:800; padding:4px 9px; border-radius:var(--r-pill);}
-.badge.featured{background:var(--primary); color:#fff;}
+.badge.featured{background:var(--brand-orange); color:#fff;}
 .badge.featured.lg{padding:6px 14px; font-size:12.5px;}
-.badge.male{background:var(--male-tint); color:var(--male);}
-.badge.female{background:var(--female-tint); color:var(--female);}
-.badge.mixed{background:var(--mixed-tint); color:var(--mixed);}
-.badge.warn{background:var(--warn-tint); color:var(--warn);}
-.badge.ok{background:var(--success-tint); color:var(--success);}
-.badge.wait{background:var(--info-tint); color:var(--info);}
-.badge.done{background:var(--sand); color:var(--text-muted);}
+.badge.male{background:var(--gender-male-soft); color:var(--gender-male);}
+.badge.female{background:var(--gender-female-soft); color:var(--gender-female);}
+.badge.mixed{background:var(--gender-mixed-soft); color:var(--gender-mixed);}
+.badge.warn{background:var(--warning-soft); color:var(--warning);}
+.badge.ok{background:var(--success-soft); color:var(--success);}
+.badge.wait{background:var(--info-soft); color:var(--info);}
+.badge.done{background:var(--surface-subtle); color:var(--text-secondary);}
 .badge.onlight{background:rgba(255,255,255,.22); color:#fff;}
-.badge.live{background:var(--error-tint); color:var(--error);}
-.badge.live i{width:6px; height:6px; border-radius:50%; background:var(--error); display:inline-block; animation:pulse 1.6s infinite;}
-.badge.live.count{background:var(--error); color:#fff; min-width:18px; height:18px; padding:0 5px; font-size:10px; justify-content:center;}
+.badge.live{background:var(--danger-soft); color:var(--danger);}
+.badge.live i{width:6px; height:6px; border-radius:50%; background:var(--danger); display:inline-block; animation:pulse 1.6s infinite;}
+.badge.live.count{background:var(--danger); color:#fff; min-width:18px; height:18px; padding:0 5px; font-size:10px; justify-content:center;}
 @keyframes pulse{0%,100%{opacity:1;} 50%{opacity:.35;}}
 
-.tag{font-size:11px; font-weight:700; padding:3px 9px; border-radius:6px; background:var(--sand); color:var(--text-muted);}
-.tag.level{background:var(--sand); color:var(--text-muted);}
-.tag.type{background:transparent; color:var(--navy-soft); border:1px solid var(--border);}
+/* Tag colour is deliberate, not decorative: level uses the brand-orange
+   family (a decision-relevant fact worth a glance), city/type uses
+   court-teal (place/location reads as "where you'll be playing"), so the
+   two most-scanned facts on a card are never the same flat grey. */
+.tag{font-size:11px; font-weight:700; padding:3px 9px; border-radius:var(--r-xs); background:var(--surface-subtle); color:var(--text-secondary);}
+.tag.level{background:var(--brand-orange-soft); color:var(--brand-orange-hover);}
+.tag.type{background:var(--court-teal-soft); color:var(--court-teal-dark);}
 .tag-row{display:flex; gap:6px; flex-wrap:wrap;}
 .tag-row.center{justify-content:center; margin:4px 0;}
 
-.rating{display:inline-flex; align-items:center; gap:4px; font-size:12.5px; font-weight:700; color:var(--yellow);}
+.rating{display:inline-flex; align-items:center; gap:4px; font-size:12.5px; font-weight:700; color:var(--accent-gold);}
 
 /* ================= CARDS ================= */
-.card{background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); padding:14px; box-shadow:var(--shadow-card); display:flex; flex-direction:column; gap:8px;}
-.card:hover{border-color:color-mix(in srgb, var(--primary) 45%, var(--border));}
+.card{background:var(--surface); border:1px solid var(--border-default); border-radius:var(--r-lg); padding:14px; box-shadow:var(--shadow-card); display:flex; flex-direction:column; gap:8px; transition:transform .16s ease, box-shadow .16s ease, border-color .16s ease;}
+.card:hover{border-color:color-mix(in srgb, var(--brand-orange) 45%, var(--border-default)); transform:translateY(-2px); box-shadow:0 4px 10px -4px rgba(26,46,69,.12), 0 14px 28px -14px rgba(26,46,69,.24);}
 .card-top{display:flex; align-items:center; justify-content:space-between;}
-.card h3{font-size:15px; line-height:1.3;}
+/* Two lines max, then ellipsis — a long activity title never pushes the
+   rest of the card's facts down or breaks the grid's row height. */
+.card h3{font-size:15.5px; font-weight:800; line-height:1.3; letter-spacing:-.01em; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;}
 .card-foot{display:flex; align-items:center; justify-content:space-between; margin-top:auto; padding-top:6px;}
 
-.price{font-size:16px; font-weight:800; color:var(--navy); font-variant-numeric:tabular-nums;}
+.price{font-size:17px; font-weight:800; color:var(--ink-navy); font-variant-numeric:tabular-nums; letter-spacing:-.01em;}
 .price.free{color:var(--success);}
 
+/* Featured — a warm, unmistakably-lighter-not-solid-orange tint plus a
+   very faint court-line texture; date/time gets extra weight since
+   that's the fact someone glancing at a featured strip decides on
+   first. Never the full saturated brand orange as a card background. */
+.featured-card{
+  background:linear-gradient(160deg, var(--brand-orange-soft) 0%, var(--surface) 62%);
+  background-image:linear-gradient(160deg, var(--brand-orange-soft) 0%, var(--surface) 62%), repeating-linear-gradient(135deg, rgba(26,46,69,.03) 0 2px, transparent 2px 22px);
+  border-color:color-mix(in srgb, var(--brand-orange) 25%, var(--border-default));
+}
+.featured-card .meta-date{font-weight:700; color:var(--text-primary);}
+.featured-card .meta-date svg{color:var(--brand-orange);}
+.btn-cta.featured{padding:10px 20px; font-size:13px; box-shadow:0 6px 14px -6px color-mix(in srgb, var(--brand-orange) 60%, transparent);}
+
 .meta{display:flex; flex-direction:column; gap:5px; margin:2px 0;}
-.meta li{display:flex; align-items:center; gap:6px; font-size:12.5px; color:var(--text-muted);}
-.meta svg{flex:none; color:var(--text-muted);}
-.meta.box{background:var(--sand); border-radius:var(--r-md); padding:10px 12px; gap:7px; margin:4px 0;}
+.meta li{display:flex; align-items:flex-start; gap:6px; font-size:12.5px; color:var(--text-secondary);}
+.meta li svg{margin-top:2px;}
+.meta li span{min-width:0; overflow-wrap:break-word;}
+.meta svg{flex:none; color:var(--text-secondary);}
+.meta.box{background:var(--surface-subtle); border-radius:var(--r-md); padding:10px 12px; gap:7px; margin:4px 0;}
+
+@media (prefers-reduced-motion: reduce){ .card{transition:none;} .card:hover{transform:none;} }
 
 /* Information-completeness hint — deliberately understated so it never
    competes with the status badge or CTA; needs-info gets a touch more
    weight than partial, never a color-only signal (icon + text always
    travel together). */
-.info-quality-hint{display:flex; align-items:center; gap:5px; font-size:11px; color:var(--text-muted); margin:2px 0 0;}
+.info-quality-hint{display:flex; align-items:center; gap:5px; font-size:11px; color:var(--text-secondary); margin:2px 0 0;}
 .info-quality-hint svg{flex:none;}
-.info-quality-hint.needs-info{color:var(--warn);}
+.info-quality-hint.needs-info{color:var(--warning);}
+
+/* ================= COURT TEXTURE =================
+   A faint repeating diagonal-line pattern standing in for court/net
+   markings — used sparingly (hero bands, section dividers) on top of a
+   solid brand colour, never on plain white/paper. This is the one place
+   the "sport court" idea shows up as a texture rather than only a color,
+   so the product doesn't read as a generic list app with orange/teal
+   swapped in. */
+.court-texture{
+  background-image:repeating-linear-gradient(135deg, rgba(255,255,255,.10) 0 2px, transparent 2px 26px);
+}
+
+/* Shared card shell — same surface/border/radius/shadow combination
+   used by info-card, readiness-summary, position-board, record-list,
+   etc. Each still adds its own accent (border-left colour) so they read
+   as different *kinds* of card, not just one repeated block. */
+.surface-card{background:var(--surface); border:1px solid var(--border-default); border-radius:var(--r-lg); padding:16px; box-shadow:var(--shadow-card);}
 
 /* ================= LAYOUT PRIMITIVES ================= */
 .content{flex:1; min-width:0; padding:14px 16px calc(100px + var(--tabbar-h));}
@@ -186,8 +284,9 @@ img{max-width:100%; display:block;}
 .strip{margin-bottom:28px;}
 .strip-head{display:flex; align-items:baseline; gap:10px; margin-bottom:12px;}
 .strip-head h2{font-size:16px;}
-.see-all{margin-left:auto; font-size:12.5px; font-weight:700; color:var(--primary); display:flex; align-items:center; gap:2px;}
-.result-count{margin-left:auto; font-size:12px; color:var(--text-muted); font-variant-numeric:tabular-nums;}
+.see-all{margin-left:auto; background:none; border:none; padding:0; font-size:12.5px; font-weight:700; color:var(--brand-orange); display:flex; align-items:center; gap:2px;}
+.see-all:hover{color:var(--brand-orange-hover);}
+.result-count{margin-left:auto; font-size:12px; color:var(--text-secondary); font-variant-numeric:tabular-nums;}
 
 .card-scroll{display:flex; gap:12px; overflow-x:auto; padding-bottom:6px; margin:0 -16px; padding-left:16px; padding-right:16px; scrollbar-width:thin;}
 .event-card{flex:none; width:230px;}
@@ -196,24 +295,24 @@ img{max-width:100%; display:block;}
   .event-card{width:auto; flex:1 1 220px;}
 }
 
-.notice{display:flex; gap:10px; background:var(--info-tint); color:var(--info); border-radius:var(--r-md); padding:12px 14px; margin-top:12px;}
+.notice{display:flex; gap:10px; background:var(--info-soft); color:var(--info); border-radius:var(--r-md); padding:12px 14px; margin-top:12px;}
 .notice b{display:block; font-size:12.5px; margin-bottom:4px;}
 .notice ul{font-size:12px; opacity:.9; display:flex; flex-direction:column; gap:2px;}
 .notice ul li::before{content:"·  ";}
 .notice p{font-size:12px; opacity:.9; margin:0; line-height:1.6;}
 
-.sticky-cta{position:sticky; bottom:0; z-index:20; display:flex; gap:10px; padding:12px 16px calc(12px + env(safe-area-inset-bottom)); background:color-mix(in srgb, var(--surface) 95%, transparent); backdrop-filter:blur(10px); border-top:1px solid var(--border);}
+.sticky-cta{position:sticky; bottom:0; z-index:20; display:flex; gap:10px; padding:12px 16px calc(12px + env(safe-area-inset-bottom)); background:color-mix(in srgb, var(--surface) 95%, transparent); backdrop-filter:blur(10px); border-top:1px solid var(--border-default);}
 .sticky-cta .btn-secondary{flex:none; padding-inline:16px;}
 .sticky-cta .btn-primary{flex:1;}
 
 /* ================= SITE FOOTER ================= */
-.site-footer{border-top:1px solid var(--border); padding:20px 16px calc(24px + var(--tabbar-h)); text-align:center; font-size:12px; color:var(--text-muted);}
+.site-footer{border-top:1px solid var(--border-default); padding:20px 16px calc(24px + var(--tabbar-h)); text-align:center; font-size:12px; color:var(--text-secondary);}
 @media (min-width: 1024px){ .site-footer{padding:24px 32px;} }
 
 /* Shared empty-state message — used on Explore, Favorites, History,
    Bookings, and Manage, so it lives in the base stylesheet rather than
    one page's. */
-.empty-state{font-size:13.5px; color:var(--text-muted); text-align:center; padding:32px 0; display:flex; flex-direction:column; align-items:center; gap:8px;}
+.empty-state{font-size:13.5px; color:var(--text-secondary); text-align:center; padding:32px 0; display:flex; flex-direction:column; align-items:center; gap:8px;}
 
 @media (prefers-reduced-motion: reduce){
   .badge.live i{animation:none;}
@@ -230,13 +329,13 @@ img{max-width:100%; display:block;}
 @media (min-width: 1024px){ .toast-viewport{bottom:24px;} }
 .toast{
   pointer-events:auto; display:flex; align-items:center; gap:10px;
-  background:var(--navy); color:#fff; border-radius:var(--r-md); padding:12px 14px;
+  background:var(--ink-navy); color:#fff; border-radius:var(--r-md); padding:12px 14px;
   font-size:13px; font-weight:600; box-shadow:var(--shadow-pop);
   animation:toast-in .18s ease-out;
 }
 .toast span{flex:1;}
 .toast-close{flex:none; width:22px; height:22px; border-radius:50%; border:none; background:rgba(255,255,255,.18); color:#fff; display:flex; align-items:center; justify-content:center;}
-.toast-error{background:var(--error);}
+.toast-error{background:var(--danger);}
 .toast-success{background:var(--success);}
 @keyframes toast-in{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
 
@@ -250,7 +349,7 @@ img{max-width:100%; display:block;}
 @media (min-width: 1024px){ .compare-tray{bottom:20px;} }
 .compare-tray-inner{
   pointer-events:auto; width:100%; max-width:480px;
-  background:var(--navy); color:#fff; border-radius:var(--r-lg); padding:12px 14px calc(12px + env(safe-area-inset-bottom));
+  background:var(--ink-navy); color:#fff; border-radius:var(--r-lg); padding:12px 14px calc(12px + env(safe-area-inset-bottom));
   box-shadow:var(--shadow-pop); display:flex; flex-direction:column; gap:8px;
 }
 .compare-tray-head{display:flex; align-items:center; justify-content:space-between; font-size:12.5px; font-weight:700;}

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import Header from '../components/Header'
 import BottomTabs from '../components/BottomTabs'
 import SiteFooter from '../components/SiteFooter'
@@ -10,6 +10,8 @@ import EventCard from '../components/EventCard'
 import { Icon } from '../components/Icons'
 import { useEvents } from '../context/EventsContext'
 import { usePreferences } from '../context/PreferencesContext'
+import { useProfile } from '../context/ProfileContext'
+import { useSavedSearches } from '../context/SavedSearchesContext'
 import { DEFAULT_FILTERS, EVENT_TYPES, FILTER_ALL, SECTION_VIEW, SORTS } from '../constants/taxonomy'
 import {
   DEFAULT_EXPLORE_STATE, FILTER_KEYS, getPreferencesSyncPatch, parseExploreParams, sanitizeExploreParams,
@@ -20,9 +22,27 @@ import { matchesSearch } from '../utils/search'
 import { sortEvents } from '../utils/sortEvents'
 import { isPubliclyVisible } from '../utils/eventStatus'
 import { getAlternativeFilterSuggestions } from '../utils/alternativeFilters'
+import { savedSearchToQueryString } from '../utils/savedSearches'
 import '../styles/explore.css'
 
 const QUICK_TYPES = [{ value: FILTER_ALL, label: '全部' }, ...EVENT_TYPES]
+
+// Compact one-click shortcuts into a filtered state — not a new filter
+// dimension, each just applies filters/dateRange the app already has.
+// "我需要的位置" only carries a real value when the visitor has actually
+// set a specific default position in their volleyball preferences
+// (universal/unset has nothing honest to filter by), in which case it
+// opens the filter sheet on that section instead of applying a
+// meaningless filter.
+function buildQuickEntries(profile) {
+  const hasRealPosition = profile.defaultPosition && profile.defaultPosition !== 'universal'
+  return [
+    { key: 'today', label: '今天臨打', patch: { dateRange: 'today' } },
+    { key: 'weekend', label: '週末球局', patch: { dateRange: 'weekend' } },
+    { key: 'intermediate', label: '中階活動', patch: { level: 'intermediate' } },
+    { key: 'myPosition', label: '我需要的位置', patch: hasRealPosition ? { position: profile.defaultPosition } : null },
+  ]
+}
 
 function getResultCountText(count, query, isFiltering) {
   const trimmed = query.trim()
@@ -44,6 +64,8 @@ export default function Explore() {
   const [saveSearchOpen, setSaveSearchOpen] = useState(false)
   const { filters: storedFilters, setFilters: setStoredFilters, resetFilters: resetStoredFilters } = usePreferences()
   const { events } = useEvents()
+  const { profile } = useProfile()
+  const { savedSearches } = useSavedSearches()
   const seededRef = useRef(false)
 
   useEffect(() => {
@@ -120,6 +142,13 @@ export default function Explore() {
     // showing the wrong empty state.
     commit({ [key]: value, view: SECTION_VIEW.ALL }, { push: true })
     setStoredFilters({ ...filters, [key]: value })
+  }
+  function handleQuickEntry(patch) {
+    if (!patch) { setFilterOpen(true); return }
+    const basicPatch = {}
+    Object.keys(patch).forEach((k) => { if (k in DEFAULT_FILTERS) basicPatch[k] = patch[k] })
+    commit({ ...patch, view: SECTION_VIEW.ALL }, { push: true })
+    if (Object.keys(basicPatch).length) setStoredFilters({ ...filters, ...basicPatch })
   }
   function handleResetFilters() {
     const cleared = {}
@@ -209,6 +238,44 @@ export default function Explore() {
         onSearchClear={clearSearchInput}
         onSearchCommit={commitSearchNow}
       />
+
+      {isBrowsingHome && (
+        <div className="explore-hero court-texture">
+          <Icon id="i-ball" size={72} className="explore-hero-ball" />
+          <div className="explore-hero-body">
+            <h1>找到適合你的下一場球</h1>
+            <p className="explore-hero-sub">依地區、程度、位置與時間，快速找到可以加入的排球活動。</p>
+            <label className="explore-hero-search">
+              <span className="sr-only">搜尋活動</span>
+              <Icon id="i-search" size={17} />
+              <input
+                type="search"
+                placeholder="搜尋球館、地區或活動"
+                value={searchInput}
+                onChange={(e) => handleSearchInputChange(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') commitSearchNow() }}
+                onBlur={commitSearchNow}
+              />
+              {searchInput && (
+                <button type="button" aria-label="清除搜尋" onClick={clearSearchInput}>
+                  <Icon id="i-close" size={13} />
+                </button>
+              )}
+            </label>
+            <p className="explore-hero-stat">{visibleEvents.length} 場開放中的活動，隨時可以加入</p>
+          </div>
+        </div>
+      )}
+
+      {isBrowsingHome && (
+        <div className="quick-entry-row" aria-label="快速入口">
+          {buildQuickEntries(profile).map((entry) => (
+            <button key={entry.key} type="button" className="quick-entry-chip" onClick={() => handleQuickEntry(entry.patch)}>
+              {entry.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="layout">
         <aside className="filter-sidebar" aria-label="篩選活動">
@@ -303,29 +370,15 @@ export default function Explore() {
               </div>
             </section>
           ) : sectionView === SECTION_VIEW.FEATURED ? (
-            <SectionOnly title="精選活動" list={featured} onBack={() => handleSectionView(SECTION_VIEW.ALL)} />
+            <SectionOnly title="精選活動" list={featured} onBack={() => handleSectionView(SECTION_VIEW.ALL)} variant="featured" />
           ) : sectionView === SECTION_VIEW.URGENT ? (
-            <SectionOnly title="臨打專區" list={urgent} onBack={() => handleSectionView(SECTION_VIEW.ALL)} urgent />
+            <SectionOnly title="臨打專區" list={urgent} onBack={() => handleSectionView(SECTION_VIEW.ALL)} variant="urgent" />
           ) : (
             <>
-              {featured.length > 0 && (
-                <section className="strip">
-                  <div className="strip-head">
-                    <h2>精選活動</h2>
-                    <button type="button" className="see-all" onClick={() => handleSectionView(SECTION_VIEW.FEATURED)}>
-                      查看全部 <Icon id="i-chevron" size={14} />
-                    </button>
-                  </div>
-                  <div className="card-scroll">
-                    {featured.map((ev) => <EventCard key={ev.id} ev={ev} />)}
-                  </div>
-                </section>
-              )}
-
               {urgent.length > 0 && (
                 <section className="strip">
                   <div className="strip-head">
-                    <h2>臨打專區 <span className="badge live"><i />急徵隊友</span></h2>
+                    <h2>近期臨打 <span className="badge live"><i />急徵隊友</span></h2>
                     <button type="button" className="see-all" onClick={() => handleSectionView(SECTION_VIEW.URGENT)}>
                       查看全部 <Icon id="i-chevron" size={14} />
                     </button>
@@ -336,8 +389,35 @@ export default function Explore() {
                 </section>
               )}
 
+              {featured.length > 0 && (
+                <section className="strip">
+                  <div className="strip-head">
+                    <h2>精選活動</h2>
+                    <button type="button" className="see-all" onClick={() => handleSectionView(SECTION_VIEW.FEATURED)}>
+                      查看全部 <Icon id="i-chevron" size={14} />
+                    </button>
+                  </div>
+                  <div className="card-scroll">
+                    {featured.map((ev) => <EventCard key={ev.id} ev={ev} variant="featured" />)}
+                  </div>
+                </section>
+              )}
+
+              {savedSearches.length > 0 && (
+                <section className="strip saved-search-strip">
+                  <div className="strip-head"><h2>常用的探索條件</h2></div>
+                  <div className="saved-search-chip-row">
+                    {savedSearches.map((s) => (
+                      <Link key={s.id} to={`/explore${savedSearchToQueryString(s)}`} className="saved-search-entry-chip">
+                        <Icon id="i-filter" size={13} />{s.name}
+                      </Link>
+                    ))}
+                  </div>
+                </section>
+              )}
+
               <section className="strip" id="more-events">
-                <div className="strip-head"><h2>更多活動</h2><span className="result-count">{more.length} 場</span></div>
+                <div className="strip-head"><h2>全部活動</h2><span className="result-count">{more.length} 場</span></div>
                 {more.length === 0 ? (
                   <p className="empty-state">目前沒有其他活動。</p>
                 ) : (
@@ -369,7 +449,8 @@ export default function Explore() {
   )
 }
 
-function SectionOnly({ title, list, onBack, urgent = false }) {
+function SectionOnly({ title, list, onBack, variant = 'default' }) {
+  const isUrgent = variant === 'urgent'
   return (
     <section className="strip">
       <div className="strip-head">
@@ -381,8 +462,8 @@ function SectionOnly({ title, list, onBack, urgent = false }) {
       {list.length === 0 ? (
         <p className="empty-state">目前沒有符合條件的{title}。</p>
       ) : (
-        <div className={urgent ? 'urgent-grid' : 'event-grid'}>
-          {list.map((ev) => <EventCard key={ev.id} ev={ev} variant={urgent ? 'urgent' : 'default'} />)}
+        <div className={isUrgent ? 'urgent-grid' : 'event-grid'}>
+          {list.map((ev) => <EventCard key={ev.id} ev={ev} variant={variant} />)}
         </div>
       )}
     </section>

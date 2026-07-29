@@ -16,17 +16,8 @@ import {
 } from '../constants/volleyballTaxonomy'
 import { EVENT_STATUS_META, getEventStatus, getRemainingSlots } from '../utils/eventStatus'
 import { buildFromState } from '../utils/navigation'
+import { getEventInformationQuality } from '../utils/informationQuality'
 import '../styles/compare.css'
-
-// Compare never fabricates a "quality score" — this is a plain "did the
-// organiser fill in the fields that actually matter for deciding whether
-// to join" check. Phase 8 introduces getEventInformationQuality() as the
-// shared source for this same judgement across EventDetail/EventCard/
-// Manage; once that lands this row should read from it instead of
-// re-deriving its own condition here.
-function hasOrganizerContact(ev) {
-  return Boolean(ev.organizerName?.trim() && ev.organizerContact?.trim())
-}
 
 function positionsNeededSummary(ev) {
   const needed = (ev.positionsNeeded || []).filter((p) => p && p.count > 0)
@@ -66,7 +57,7 @@ function buildRows(ev) {
     { key: 'libero', label: '允許自由球員', value: boolLabel(ev.liberoAllowed) },
     { key: 'equipment', label: '提供設備', value: equipmentSummary(ev) },
     { key: 'positions', label: '需要位置', value: positionsNeededSummary(ev) },
-    { key: 'info', label: '主辦方聯絡資訊', value: hasOrganizerContact(ev) ? '已提供' : '尚未提供' },
+    { key: 'info', label: '資訊完整度', value: getEventInformationQuality(ev).label },
   ]
 }
 
@@ -144,14 +135,21 @@ export default function Compare() {
                   </tr>
                 </thead>
                 <tbody>
-                  {rowMeta.map((meta, rowIndex) => (
-                    <tr key={meta.key}>
-                      <th scope="row">{meta.label}</th>
-                      {events.map((ev, colIndex) => (
-                        <td key={ev.id}>{rowsByEvent[colIndex][rowIndex].value}</td>
-                      ))}
-                    </tr>
-                  ))}
+                  {rowMeta.map((meta, rowIndex) => {
+                    // A row where the events genuinely disagree is worth a
+                    // second look — a faint highlight, never a different
+                    // solid colour per column (that would just be noise).
+                    const values = rowsByEvent.map((rows) => rows[rowIndex].value)
+                    const differs = events.length > 1 && new Set(values).size > 1
+                    return (
+                      <tr key={meta.key} className={differs ? 'differs' : undefined}>
+                        <th scope="row">{meta.label}</th>
+                        {events.map((ev, colIndex) => (
+                          <td key={ev.id}>{rowsByEvent[colIndex][rowIndex].value}</td>
+                        ))}
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>

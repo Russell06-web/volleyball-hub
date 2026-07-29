@@ -28,7 +28,7 @@ export default function CancelModal({ booking, event, onClose, onConfirm }) {
     <Sheet open={!!booking} onClose={onClose} labelledBy="cancelTitle" wide>
       <div className="filter-modal-head">
         <h2 id="cancelTitle">{isWaitlist ? '取消候補' : '取消報名'}</h2>
-        <button className="icon-btn" onClick={onClose} aria-label="關閉"><Icon id="i-chevron" size={16} /></button>
+        <button className="icon-btn" onClick={onClose} aria-label="關閉"><Icon id="i-close" size={16} /></button>
       </div>
 
       <div className="warn-banner">

@@ -167,7 +167,7 @@ function Dashboard({ onNewEvent }) {
       ) : (
         <div className="record-list">
           {records.map((r) => (
-            <div key={r.key} className="record-row">
+            <div key={r.key} className={`record-row ${STATUS_META[r.status]?.tone || ''}`}>
               <div><b>{r.name}</b><span>{r.event}</span></div>
               <span className={`badge ${STATUS_META[r.status]?.tone || ''}`}>{STATUS_META[r.status]?.label || r.status}</span>
               <span className="record-date">{r.date}</span>
@@ -379,6 +379,24 @@ function CreateWizard({ onBack }) {
         <div className="step-progress-head"><span>步驟 {step} / 4・{STEP_TITLES[step - 1]}</span><span>{pct}%</span></div>
         <div className="step-progress-bar"><div className="step-progress-fill" style={{ width: `${pct}%` }} /></div>
       </div>
+
+      {/* Desktop-only stepper — same 4 steps, laid out as circles + labels
+          instead of a bar, since there's room to show the whole path at
+          once. The bar above still carries the same information on
+          mobile/tablet, so this is presentation-only, not a second
+          source of truth for what step you're on. */}
+      <ol className="stepper" aria-hidden="true">
+        {STEP_TITLES.map((title, i) => {
+          const n = i + 1
+          const state = n < step ? 'done' : n === step ? 'current' : 'upcoming'
+          return (
+            <li key={title} className={`stepper-item ${state}`}>
+              <span className="stepper-dot">{state === 'done' ? <Icon id="i-check" size={13} /> : n}</span>
+              <span className="stepper-label">{title}</span>
+            </li>
+          )
+        })}
+      </ol>
 
       {step === 1 && (
         <section className="wizard-step">

@@ -6,10 +6,10 @@
 .profile-main{display:flex; flex-direction:column; gap:22px; min-width:0;}
 .profile-main .strip{margin-bottom:0;}
 
-.profile-card{background:var(--primary); color:#fff; border-radius:var(--r-lg); padding:22px 20px; display:flex; flex-direction:column; align-items:center; text-align:center; gap:6px; box-shadow:var(--shadow-card);}
+.profile-card{background:var(--brand-orange); color:#fff; border-radius:var(--r-lg); padding:22px 20px; display:flex; flex-direction:column; align-items:center; text-align:center; gap:6px; box-shadow:var(--shadow-card);}
 .profile-avatar-row{position:relative; margin-bottom:6px;}
 .profile-avatar{width:76px; height:76px; border-radius:50%; background:rgba(255,255,255,.2); border:2px solid rgba(255,255,255,.55); display:flex; align-items:center; justify-content:center; font-size:26px; font-weight:800; position:relative;}
-.avatar-edit{position:absolute; right:-2px; bottom:-2px; width:24px; height:24px; border-radius:50%; background:#fff; color:var(--primary); border:none; display:flex; align-items:center; justify-content:center;}
+.avatar-edit{position:absolute; right:-2px; bottom:-2px; width:24px; height:24px; border-radius:50%; background:#fff; color:var(--brand-orange); border:none; display:flex; align-items:center; justify-content:center;}
 .profile-card h1{font-size:19px;}
 .bio{font-size:12.5px; line-height:1.6; opacity:.92; max-width:32ch;}
 .profile-stats{display:grid; grid-template-columns:repeat(2,1fr); gap:8px; width:100%; margin-top:10px; background:rgba(255,255,255,.14); border-radius:var(--r-md); padding:12px 4px;}
@@ -19,19 +19,19 @@
 .profile-card .btn-secondary{margin-top:6px; background:rgba(255,255,255,.16); border-color:rgba(255,255,255,.4); color:#fff;}
 .profile-card .btn-secondary:hover{background:rgba(255,255,255,.26);}
 
-.settings-list{background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); box-shadow:var(--shadow-card); overflow:hidden;}
-.settings-list h3{display:flex; align-items:center; justify-content:space-between; font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.06em; font-weight:700; padding:12px 16px 4px;}
+.settings-list{background:var(--surface); border:1px solid var(--border-default); border-radius:var(--r-lg); box-shadow:var(--shadow-card); overflow:hidden;}
+.settings-list h3{display:flex; align-items:center; justify-content:space-between; font-size:12px; color:var(--text-secondary); text-transform:uppercase; letter-spacing:.06em; font-weight:700; padding:12px 16px 4px;}
 .settings-list h3 .result-count{margin-left:0; text-transform:none; letter-spacing:normal; font-weight:600;}
 
-.settings-list .saved-searches-section{border-top:1px solid var(--border); padding-top:2px;}
-.settings-list .saved-searches-section h4{display:flex; align-items:center; justify-content:space-between; font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.06em; font-weight:700; padding:12px 16px 4px; margin:0;}
+.settings-list .saved-searches-section{border-top:1px solid var(--border-default); padding-top:2px;}
+.settings-list .saved-searches-section h4{display:flex; align-items:center; justify-content:space-between; font-size:12px; color:var(--text-secondary); text-transform:uppercase; letter-spacing:.06em; font-weight:700; padding:12px 16px 4px; margin:0;}
 .settings-list .saved-searches-section h4 .result-count{margin-left:0; text-transform:none; letter-spacing:normal; font-weight:600;}
 .saved-searches-section .field-hint, .saved-searches-section .empty-state{padding:0 16px 12px; text-align:left; margin:0;}
 .saved-search-list{display:flex; flex-direction:column;}
-.saved-search-item{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 16px; border-top:1px solid var(--border);}
+.saved-search-item{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 16px; border-top:1px solid var(--border-default);}
 .saved-search-info{display:flex; flex-direction:column; gap:1px; min-width:0;}
-.saved-search-info b{font-size:13.5px; font-weight:700; color:var(--text);}
-.saved-search-info span{font-size:11.5px; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.saved-search-info b{font-size:13.5px; font-weight:700; color:var(--text-primary);}
+.saved-search-info span{font-size:11.5px; color:var(--text-secondary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
 .saved-search-actions{display:flex; align-items:center; gap:6px; flex:none;}
 .saved-search-rename{width:100%; display:flex; flex-direction:column; gap:6px;}
 .saved-search-rename .saved-search-actions{justify-content:flex-end;}
@@ -40,26 +40,26 @@
    section, and those must never inherit this row's full-width/icon+chev
    layout (a descendant selector would leak into them). */
 .settings-list > a, .settings-list > button{
-  display:flex; align-items:center; gap:12px; width:100%; padding:13px 16px; border-top:1px solid var(--border);
-  font-size:14px; font-weight:700; color:var(--text); background:none; border-left:none; border-right:none; border-bottom:none;
+  display:flex; align-items:center; gap:12px; width:100%; padding:13px 16px; border-top:1px solid var(--border-default);
+  font-size:14px; font-weight:700; color:var(--text-primary); background:none; border-left:none; border-right:none; border-bottom:none;
   text-align:left; font-family:inherit; cursor:pointer;
 }
 .settings-list > a:first-of-type, .settings-list > button:first-of-type{border-top:none;}
-.settings-list > a:hover, .settings-list > button:hover{background:var(--sand);}
-.settings-list > a svg:first-child, .settings-list > button svg:first-child{color:var(--primary); flex:none;}
+.settings-list > a:hover, .settings-list > button:hover{background:var(--surface-subtle);}
+.settings-list > a svg:first-child, .settings-list > button svg:first-child{color:var(--brand-orange); flex:none;}
 .settings-list > a div, .settings-list > button div{display:flex; flex-direction:column; gap:1px; flex:1; min-width:0;}
-.settings-list > a span, .settings-list > button span{font-size:11.5px; color:var(--text-muted); font-weight:500;}
-.settings-list > a .chev, .settings-list > button .chev{color:var(--text-muted); flex:none;}
-.settings-list > a.danger, .settings-list > button.danger{color:var(--error);}
-.settings-list > a.danger svg:first-child, .settings-list > button.danger svg:first-child{color:var(--error);}
+.settings-list > a span, .settings-list > button span{font-size:11.5px; color:var(--text-secondary); font-weight:500;}
+.settings-list > a .chev, .settings-list > button .chev{color:var(--text-secondary); flex:none;}
+.settings-list > a.danger, .settings-list > button.danger{color:var(--danger);}
+.settings-list > a.danger svg:first-child, .settings-list > button.danger svg:first-child{color:var(--danger);}
 
 .settings-static-row{
-  display:flex; align-items:center; gap:12px; width:100%; padding:13px 16px; border-top:1px solid var(--border);
-  font-size:14px; font-weight:700; color:var(--text);
+  display:flex; align-items:center; gap:12px; width:100%; padding:13px 16px; border-top:1px solid var(--border-default);
+  font-size:14px; font-weight:700; color:var(--text-primary);
 }
-.settings-static-row svg:first-child{color:var(--primary); flex:none;}
+.settings-static-row svg:first-child{color:var(--brand-orange); flex:none;}
 .settings-static-row div{display:flex; flex-direction:column; gap:1px; flex:1; min-width:0;}
-.settings-static-row span{font-size:11.5px; color:var(--text-muted); font-weight:500;}
+.settings-static-row span{font-size:11.5px; color:var(--text-secondary); font-weight:500;}
 
 @media (min-width: 640px){
   .profile-layout{padding:20px 24px calc(100px + var(--tabbar-h));}

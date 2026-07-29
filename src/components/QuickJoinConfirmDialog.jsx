@@ -35,7 +35,7 @@ export default function QuickJoinConfirmDialog({ event, profile, open, onClose, 
   }
 
   return (
-    <Sheet open={open} onClose={onClose} labelledBy="quickJoinTitle" describedBy="quickJoinDesc">
+    <Sheet open={open} onClose={onClose} labelledBy="quickJoinTitle" describedBy="quickJoinDesc" wide className="quick-join-sheet">
       <div className="filter-modal-head">
         <h2 id="quickJoinTitle">{full ? '快速加入候補' : '快速加入'}</h2>
         <button className="icon-btn" onClick={onClose} aria-label="關閉"><Icon id="i-close" size={16} /></button>

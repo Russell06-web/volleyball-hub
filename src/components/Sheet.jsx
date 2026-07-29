@@ -10,7 +10,7 @@ const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), input:not([disabled
 //    Shift+Tab cycle instead of escaping to the page behind it)
 //  - focus returns to whatever triggered the dialog when it closes
 //  - Escape closes it, background scroll is locked while it's open
-export default function Sheet({ open, onClose, labelledBy, describedBy, children, wide = false }) {
+export default function Sheet({ open, onClose, labelledBy, describedBy, children, wide = false, className = '' }) {
   const panelRef = useRef(null)
   const triggerRef = useRef(null)
 
@@ -57,7 +57,7 @@ export default function Sheet({ open, onClose, labelledBy, describedBy, children
   return (
     <div className="filter-modal" role="dialog" aria-modal="true" aria-labelledby={labelledBy} aria-describedby={describedBy}>
       <div className="filter-modal-backdrop" onClick={onClose} />
-      <div className={`filter-modal-sheet${wide ? ' wide' : ''}`} ref={panelRef} tabIndex={-1}>
+      <div className={`filter-modal-sheet${wide ? ' wide' : ''}${className ? ` ${className}` : ''}`} ref={panelRef} tabIndex={-1}>
         {children}
       </div>
     </div>

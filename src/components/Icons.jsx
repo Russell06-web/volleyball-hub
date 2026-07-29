@@ -26,15 +26,19 @@ export default function Icons() {
       <symbol id="i-ball" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9.2" /><path d="M12 2.8c3 2 4.6 5.4 4.4 9.2M12 2.8c-3 2-4.6 5.4-4.4 9.2M3 9.6c3.4-1.4 7-1 9 2.4M21 9.6c-3.4-1.4-7-1-9 2.4M4.3 16.5c1.4-3.2 4.4-4.6 7.7-4.1M19.7 16.5c-1.4-3.2-4.4-4.6-7.7-4.1" /></symbol>
       <symbol id="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="6" y1="6" x2="18" y2="18" /><line x1="18" y1="6" x2="6" y2="18" /></symbol>
       <symbol id="i-compare" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="12" r="6.3" /><circle cx="15" cy="12" r="6.3" /></symbol>
-      <symbol id="i-logo" viewBox="0 0 100 130">
-        <path d="M50 122 C34 100 12 80 12 44 A38 38 0 1 1 88 44 C88 80 66 100 50 122 Z" fill="#FF6B1A" />
-        <circle cx="50" cy="44" r="35.5" fill="#FFFFFF" />
-        <g transform="translate(50,44)" fill="none" stroke="#FF6B1A" strokeWidth="4.4" strokeLinecap="round">
-          <path id="i-logo-petal" d="M-25.98,15 A30,30 0 0,1 25.98,15" />
-          <use href="#i-logo-petal" transform="rotate(120)" />
-          <use href="#i-logo-petal" transform="rotate(240)" />
+      {/* Brand mark — an actual volleyball (orange ball, curved seam
+          panels, navy ring for definition against light surfaces), not a
+          generic map-pin. This is the one piece of brand geometry meant
+          to say "volleyball" on sight, everywhere the wordmark shows up. */}
+      <symbol id="i-logo" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="46" fill="#FF6B1A" />
+        <g fill="none" stroke="#FFFFFF" strokeWidth="5" strokeLinecap="round">
+          <path d="M50 5 C24 18 13 42 24 76" />
+          <path d="M50 5 C76 18 87 42 76 76" />
+          <path d="M7 40 C30 29 70 29 93 40" />
+          <path d="M24 76 C36 92 64 92 76 76" />
         </g>
-        <circle cx="50" cy="44" r="35.5" fill="none" stroke="#FF6B1A" strokeWidth="2.5" />
+        <circle cx="50" cy="50" r="46" fill="none" stroke="#1A2E45" strokeWidth="3" />
       </symbol>
     </svg>
   )
@@ -48,9 +52,9 @@ export function Icon({ id, size = 20, className }) {
   )
 }
 
-export function LogoMark({ width = 24, height = 31.2, className }) {
+export function LogoMark({ width = 26, height = 26, className }) {
   return (
-    <svg width={width} height={height} viewBox="0 0 100 130" className={className} aria-hidden="true">
+    <svg width={width} height={height} viewBox="0 0 100 100" className={className} aria-hidden="true">
       <use href="#i-logo" />
     </svg>
   )

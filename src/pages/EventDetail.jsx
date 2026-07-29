@@ -8,6 +8,7 @@ import RegistrationReadinessSummary from '../components/RegistrationReadinessSum
 import { useBookings } from '../context/BookingsContext'
 import { usePreferences } from '../context/PreferencesContext'
 import { useFavorites } from '../context/FavoritesContext'
+import { useCompare } from '../context/CompareContext'
 import { useHistory } from '../context/HistoryContext'
 import { useEvents } from '../context/EventsContext'
 import { useProfile } from '../context/ProfileContext'
@@ -17,11 +18,14 @@ import { DIMENSION_LABEL, getMatchResult, MATCH_STATE_META } from '../utils/matc
 import { downloadEventIcs, hasCalendarDate } from '../utils/ics'
 import { formatPrice } from '../utils/format'
 import { getCityLabel, getGenderLabel, getLevelLabel, getPriceBracketLabel, getTypeLabel } from '../constants/taxonomy'
-import { getPlayStyleLabel } from '../constants/volleyballTaxonomy'
-import { EVENT_STATUS, EVENT_STATUS_META, getEventStatus, isWaitlistable } from '../utils/eventStatus'
+import {
+  getCourtSurfaceLabel, getNetHeightLabel, getPlayStyleLabel, getVolleyballFormatLabel, NET_HEIGHT_UNSPECIFIED,
+} from '../constants/volleyballTaxonomy'
+import { EVENT_STATUS, EVENT_STATUS_META, getEventStatus, isWaitlistable, getRemainingSlots } from '../utils/eventStatus'
 import { planRegistration } from '../services/registrationService'
 import { resolveBackTo } from '../utils/navigation'
 import { getEventInformationQuality, INFO_FIELD_LABELS } from '../utils/informationQuality'
+import { getPositionShortageSummary } from '../utils/positionShortage'
 import '../styles/detail.css'
 import '../styles/modals.css'
 import '../styles/notfound.css'
@@ -68,7 +72,7 @@ function EventNotFound() {
   useEffect(() => { document.title = '找不到此活動｜Volleyball Hub' }, [])
   return (
     <div className="event-notfound">
-      <span className="notfound-mark"><LogoMark width={36} height={47} /></span>
+      <span className="notfound-mark"><LogoMark width={44} height={44} /></span>
       <h1>找不到此活動</h1>
       <p>這場活動可能已經被移除，或網址不正確。</p>
       <div className="notfound-actions">
@@ -87,6 +91,7 @@ export default function EventDetail() {
   const { addBooking, hasActiveBooking, hasWaitlistBooking, bookings } = useBookings()
   const { filters } = usePreferences()
   const { isFavorite, toggleFavorite } = useFavorites()
+  const { isCompared, toggleCompare } = useCompare()
   const { recordView } = useHistory()
   const { getEventById, updateEvent } = useEvents()
   const { profile } = useProfile()
@@ -116,12 +121,17 @@ export default function EventDetail() {
   const priceLabel = formatPrice(event.price)
   const match = !cancelled && !completed ? getMatchResult(event, filters) : null
   const favorited = isFavorite(event.id)
+  const compared = isCompared(event.id)
   const alreadyActive = hasActiveBooking(event.id)
   const alreadyWaitlist = hasWaitlistBooking(event.id)
   const hasHighlights = event.hasInsurance || event.hasCoach || event.playStyle || (event.features && event.features.length > 0)
   const showPositionBoard = !cancelled && !completed && !full
   const infoQuality = getEventInformationQuality(event)
   const quickReady = isQuickJoinReady(profile)
+  const netHeightKnown = event.netHeight && event.netHeight !== NET_HEIGHT_UNSPECIFIED
+  const shortage = showPositionBoard ? getPositionShortageSummary(event) : null
+  const remaining = getRemainingSlots(event)
+  const paymentLabel = event.price === 0 ? '無需付款' : (event.paymentMethod || '現場付款')
   const ctaLabelBase = getCtaLabel({ alreadyActive, alreadyWaitlist, full, quickReady })
   const ctaLabelWithPrice = getCtaLabel({ alreadyActive, alreadyWaitlist, full, quickReady, withPrice: priceLabel })
 
@@ -251,15 +261,25 @@ export default function EventDetail() {
             </div>
           )}
 
-          <div className="detail-title-row">
-            <div>
-              <h1>{event.title}</h1>
-              <div className="tag-row">
-                {event.level !== 'open' && <span className="tag level">{getLevelLabel(event.level)}</span>}
-                {(cancelled || completed) && <span className={`badge ${EVENT_STATUS_META[status].tone}`}>{EVENT_STATUS_META[status].label}</span>}
-              </div>
+          {/* 活動摘要 — name, date/time, city+venue, level/netHeight/format,
+              status, all in one glanceable band before anything else. A
+              faint court-texture on the same ink-navy the rest of the
+              product uses for structure, never a large photo. */}
+          <div className="detail-hero court-texture">
+            <h1>{event.title}</h1>
+            <p className="detail-hero-when">
+              <Icon id="i-calendar" size={15} />{event.date}・{event.startTime}{event.endTime ? `–${event.endTime}` : ''}
+            </p>
+            <p className="detail-hero-where"><Icon id="i-pin" size={15} />{getCityLabel(event.city)}・{event.venueName}</p>
+            <div className="tag-row">
+              {event.level !== 'open' && <span className="tag level">{getLevelLabel(event.level)}</span>}
+              {netHeightKnown && <span className="tag detail">{getNetHeightLabel(event.netHeight)}</span>}
+              <span className="tag detail">{getVolleyballFormatLabel(event.volleyballFormat)}</span>
+              {(cancelled || completed || full) && <span className={`badge ${EVENT_STATUS_META[status].tone}`}>{EVENT_STATUS_META[status].label}</span>}
             </div>
           </div>
+
+          <RegistrationReadinessSummary event={event} />
 
           <section className="info-card">
             <h2>活動資訊</h2>
@@ -303,7 +323,17 @@ export default function EventDetail() {
             )}
           </section>
 
-          <RegistrationReadinessSummary event={event} />
+          <section className="info-card volleyball-spec-card">
+            <h2>排球規格</h2>
+            <ul className="info-list">
+              <li><Icon id="i-ball" size={18} /><div><b>球制</b><span>{getVolleyballFormatLabel(event.volleyballFormat)}</span></div></li>
+              <li><Icon id="i-info" size={18} /><div><b>網高</b><span>{getNetHeightLabel(event.netHeight)}</span></div></li>
+              <li><Icon id="i-shield" size={18} /><div><b>場地材質</b><span>{getCourtSurfaceLabel(event.courtSurface)}</span></div></li>
+              <li><Icon id="i-check" size={18} /><div><b>是否需要輪轉</b><span>{event.rotationRequired ? '是' : '否'}</span></div></li>
+              <li><Icon id="i-check" size={18} /><div><b>是否允許自由球員</b><span>{event.liberoAllowed ? '是' : '否'}</span></div></li>
+              <li><Icon id="i-users" size={18} /><div><b>是否可單人加入</b><span>{event.soloJoinAllowed ? '可以' : '僅接受完整隊伍'}</span></div></li>
+            </ul>
+          </section>
 
           {hasHighlights && (
             <section>
@@ -331,13 +361,45 @@ export default function EventDetail() {
               </div>
             )}
           </section>
+
+          {(event.organizerName || event.organizerContact) && (
+            <section className="info-card">
+              <h2>主辦方資訊</h2>
+              <ul className="info-list">
+                {event.organizerName && <li><Icon id="i-user" size={18} /><div><b>主辦方</b><span>{event.organizerName}</span></div></li>}
+                {event.organizerContact && <li><Icon id="i-info" size={18} /><div><b>聯絡方式</b><span>{event.organizerContact}</span></div></li>}
+              </ul>
+            </section>
+          )}
         </main>
 
         <aside className="booking-card">
+          <div className="booking-card-actions">
+            <button
+              type="button"
+              className={`icon-btn ghost sm${compared ? ' active-compare' : ''}`}
+              aria-label={compared ? '從比較中移除' : '加入比較'}
+              aria-pressed={compared}
+              onClick={() => toggleCompare(event.id)}
+            >
+              <Icon id="i-compare" size={15} />
+            </button>
+            <button
+              type="button"
+              className={`icon-btn ghost sm${favorited ? ' active-fav' : ''}`}
+              aria-label={favorited ? '取消收藏' : '收藏'}
+              aria-pressed={favorited}
+              onClick={() => toggleFavorite(event.id)}
+            >
+              <Icon id="i-heart" size={15} />
+            </button>
+          </div>
           <div className="booking-price"><span className="price">{priceLabel}</span>{event.feeNote && <span>{event.feeNote}</span>}</div>
           <ul className="booking-mini">
-            <li><Icon id="i-users" size={15} />已報名 {event.registeredCount} / {event.capacity} 人</li>
+            <li><Icon id="i-users" size={15} />{full ? '已額滿' : `尚有 ${remaining} 位名額`}（{event.registeredCount} / {event.capacity}）</li>
             <li><Icon id="i-calendar" size={15} />{event.date}・{event.startTime}</li>
+            {shortage && <li className="shortage-line"><Icon id="i-info" size={15} />{shortage.text}</li>}
+            <li><Icon id="i-shield" size={15} />{paymentLabel}</li>
           </ul>
           {cancelled || completed ? (
             <button className="btn-secondary full" disabled>{EVENT_STATUS_META[status].label}，無法報名</button>

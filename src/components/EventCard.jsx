@@ -5,6 +5,7 @@ import { useCompare } from '../context/CompareContext'
 import { formatPrice } from '../utils/format'
 import { formatEventDateLabel } from '../utils/date'
 import { getCityLabel, getLevelLabel } from '../constants/taxonomy'
+import { getNetHeightLabel, getVolleyballFormatLabel, NET_HEIGHT_UNSPECIFIED } from '../constants/volleyballTaxonomy'
 import { EVENT_STATUS, EVENT_STATUS_META, getEventStatus } from '../utils/eventStatus'
 import { buildFromState } from '../utils/navigation'
 import { getPositionShortageSummary } from '../utils/positionShortage'
@@ -15,11 +16,13 @@ import { getEventInformationQuality } from '../utils/informationQuality'
 // shows up, and so "is this full/cancelled/done" is always the same
 // getEventStatus() call instead of each card re-deriving it.
 //
-// `variant="urgent"` only changes visual presentation (badge, CTA
-// colour/label) for the 臨打專區 strip — every rule underneath (status,
-// full → waitlist, cancelled/completed → disabled, favorites, a11y
-// labels) is identical to the default card. There is no separate
-// UrgentCard component anymore.
+// Three real variants — 'default' (Standard) / 'featured' / 'urgent' —
+// change visual weight only (background tint, which facts get emphasis,
+// CTA prominence). Every rule underneath (status, full → waitlist,
+// cancelled/completed → disabled, favorites, compare, a11y labels, and
+// which data fields exist at all) is identical across all three: there
+// is no separate FeaturedCard/UrgentCard component, and no variant ever
+// sees a business-logic path the others don't.
 //
 // Condition-match ("符合目前條件" etc.) intentionally does NOT appear
 // here — Explore's filters already decide which events are in this list
@@ -35,6 +38,7 @@ export default function EventCard({ ev, variant = 'default' }) {
   const { isCompared, toggleCompare } = useCompare()
   const compared = isCompared(ev.id)
   const isUrgent = variant === 'urgent'
+  const isFeatured = variant === 'featured'
   const shortage = isUrgent && !inactive && !full ? getPositionShortageSummary(ev) : null
   const infoQuality = getEventInformationQuality(ev)
   const location = useLocation()
@@ -46,14 +50,20 @@ export default function EventCard({ ev, variant = 'default' }) {
       ? '候補'
       : isUrgent ? '立刻加入' : '報名'
 
+  // Tier-2 tags (程度/場地/網高/球制) — capped at what the card can hold
+  // without turning into a wall of chips; level/city are the two most
+  // decision-relevant facts so they always show when meaningful, net
+  // height only shows once an organiser has actually specified it.
+  const netHeightKnown = ev.netHeight && ev.netHeight !== NET_HEIGHT_UNSPECIFIED
+
   return (
-    <article className={`card event-card${isUrgent ? ' urgent-card' : ''}`}>
+    <article className={`card event-card${isUrgent ? ' urgent-card' : ''}${isFeatured ? ' featured-card' : ''}`}>
       <div className="card-top">
         {isUrgent ? (
           <span className="badge live">
             <i />急徵隊友{shortage ? `・${shortage.text}` : ''}
           </span>
-        ) : ev.isFeatured ? (
+        ) : isFeatured ? (
           <span className="badge featured">精選</span>
         ) : <span aria-hidden="true" />}
         <div className="card-actions">
@@ -79,12 +89,17 @@ export default function EventCard({ ev, variant = 'default' }) {
       <div className="tag-row">
         {ev.level !== 'open' && <span className="tag level">{getLevelLabel(ev.level)}</span>}
         <span className="tag type">{getCityLabel(ev.city)}</span>
+        {/* Volleyball-specific detail tags only compete for space when the
+            event is actually joinable — a cancelled/full card needs its
+            status tag to stand out, not share the row with 4+ tags. */}
+        {!inactive && !full && netHeightKnown && <span className="tag detail">{getNetHeightLabel(ev.netHeight)}</span>}
+        {!inactive && !full && <span className="tag detail">{getVolleyballFormatLabel(ev.volleyballFormat)}</span>}
         {inactive && <span className="tag wait">{EVENT_STATUS_META[status].label}</span>}
         {!inactive && full && <span className="tag wait">已額滿</span>}
       </div>
       <ul className="meta">
-        <li><Icon id="i-pin" size={14} />{ev.venueName}</li>
-        <li><Icon id="i-calendar" size={14} />{formatEventDateLabel(ev.date)}・{ev.startTime}</li>
+        <li><Icon id="i-pin" size={14} /><span>{ev.venueName}</span></li>
+        <li className="meta-date"><Icon id="i-calendar" size={14} />{formatEventDateLabel(ev.date)}・{ev.startTime}</li>
         <li><Icon id="i-users" size={14} />{ev.registeredCount} / {ev.capacity} 人</li>
       </ul>
       {!inactive && infoQuality.state !== 'complete' && (
@@ -97,7 +112,7 @@ export default function EventCard({ ev, variant = 'default' }) {
         {inactive ? (
           <span className="btn-cta waitlist" aria-disabled="true">{ctaLabel}</span>
         ) : (
-          <Link to={`/event/${ev.id}`} state={linkState} className={`btn-cta${full ? ' waitlist' : ''}${isUrgent && !full ? ' urgent' : ''}`}>{ctaLabel}</Link>
+          <Link to={`/event/${ev.id}`} state={linkState} className={`btn-cta${full ? ' waitlist' : ''}${isUrgent && !full ? ' urgent' : ''}${isFeatured && !full ? ' featured' : ''}`}>{ctaLabel}</Link>
         )}
       </div>
     </article>

@@ -27,7 +27,7 @@ export default function ResetDemoDataDialog({ open, onClose }) {
     <Sheet open={open} onClose={handleClose} labelledBy="resetDemoTitle">
       <div className="filter-modal-head">
         <h2 id="resetDemoTitle">重置示範資料</h2>
-        <button className="icon-btn" onClick={handleClose} aria-label="關閉"><Icon id="i-chevron" size={16} /></button>
+        <button className="icon-btn" onClick={handleClose} aria-label="關閉"><Icon id="i-close" size={16} /></button>
       </div>
 
       <div className="warn-banner">

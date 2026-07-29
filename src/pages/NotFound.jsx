@@ -12,7 +12,7 @@ export default function NotFound() {
 
   return (
     <div className="notfound-screen">
-      <span className="notfound-mark"><LogoMark width={40} height={52} /></span>
+      <span className="notfound-mark"><LogoMark width={48} height={48} /></span>
       <h1>找不到這個頁面</h1>
       <p>網址可能打錯了，或這個頁面已經不存在。</p>
       <div className="notfound-actions">
