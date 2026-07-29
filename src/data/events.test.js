@@ -35,4 +35,26 @@ describe('events seed data', () => {
       expect(e).not.toHaveProperty('registered')
     })
   })
+
+  it('every organizerContact is an obviously-fake demo number, not something that reads as real personal data', () => {
+    SEED_EVENTS.forEach((e) => {
+      expect(e.organizerContact).toMatch(/^0900-000-\d{3}$/)
+    })
+  })
+
+  it('a description only mentions a coach or insurance when the event actually has that flag set', () => {
+    SEED_EVENTS.forEach((e) => {
+      if (!e.hasCoach) expect(e.description).not.toContain('教練')
+      if (!e.hasInsurance) expect(e.description).not.toContain('保險')
+    })
+  })
+
+  it('urgent-event titles are real venue/time names, not bare headcount callouts', () => {
+    const urgentTitles = SEED_EVENTS.filter((e) => e.isUrgent).map((e) => e.title)
+    expect(urgentTitles.length).toBeGreaterThan(0)
+    urgentTitles.forEach((title) => {
+      expect(title).not.toMatch(/[！!]$/)
+      expect(title).not.toMatch(/^還缺|湊團中$/)
+    })
+  })
 })

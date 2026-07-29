@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import Header from '../components/Header'
 import BottomTabs from '../components/BottomTabs'
 import SiteFooter from '../components/SiteFooter'
@@ -10,25 +10,23 @@ import { Icon } from '../components/Icons'
 import { useEvents } from '../context/EventsContext'
 import { usePreferences } from '../context/PreferencesContext'
 import { DEFAULT_FILTERS, EVENT_TYPES, FILTER_ALL, SECTION_VIEW, SORTS } from '../constants/taxonomy'
-import { formatPrice } from '../utils/format'
+import {
+  DEFAULT_EXPLORE_STATE, FILTER_KEYS, parseExploreParams, sanitizeExploreParams,
+} from '../utils/exploreParams'
+import { getLabelForFilter } from '../utils/exploreFilterLabels'
 import { matchesSearch } from '../utils/search'
 import { sortEvents } from '../utils/sortEvents'
+import { isPubliclyVisible } from '../utils/eventStatus'
 import '../styles/explore.css'
 
 const QUICK_TYPES = [{ value: FILTER_ALL, label: '全部' }, ...EVENT_TYPES]
-const FILTER_KEYS = ['type', 'gender', 'level', 'price', 'city']
 
-function isDefaultParam(key, value) {
-  if (key === 'q') return !value || !value.trim()
-  if (key === 'sort') return value === 'default'
-  if (key === 'view') return value === SECTION_VIEW.ALL
-  return value === DEFAULT_FILTERS[key]
-}
-
-function paramsToFilters(params) {
-  const f = { ...DEFAULT_FILTERS }
-  FILTER_KEYS.forEach((k) => { const v = params.get(k); if (v) f[k] = v })
-  return f
+function getResultCountText(count, query, isFiltering) {
+  const trimmed = query.trim()
+  if (trimmed && isFiltering) return `「${trimmed}」在目前條件下找到 ${count} 場活動`
+  if (trimmed) return `「${trimmed}」找到 ${count} 場活動`
+  if (isFiltering) return `${count} 場活動符合目前條件`
+  return `共 ${count} 場活動`
 }
 
 export default function Explore() {
@@ -42,7 +40,7 @@ export default function Explore() {
     document.title = '排球活動探索｜Volleyball Hub'
   }, [])
 
-  // URL is the source of truth once it has any of these params — a
+  // URL is the source of truth once it has any relevant param — a
   // refresh, a pasted link, or browser back/forward all just re-derive
   // state from searchParams below. On the very first arrival at a bare
   // /explore with nothing in the query string, seed it once from
@@ -53,62 +51,92 @@ export default function Explore() {
     seededRef.current = true
     const hasAnyParam = [...FILTER_KEYS, 'q', 'sort', 'view'].some((k) => searchParams.has(k))
     if (hasAnyParam) return
-    const seeded = new URLSearchParams()
-    FILTER_KEYS.forEach((k) => { if (storedFilters[k] && storedFilters[k] !== DEFAULT_FILTERS[k]) seeded.set(k, storedFilters[k]) })
+    const seeded = sanitizeExploreParams({ ...DEFAULT_EXPLORE_STATE, ...storedFilters })
     if ([...seeded.keys()].length) setSearchParams(seeded, { replace: true })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const query = searchParams.get('q') || ''
-  const filters = useMemo(() => paramsToFilters(searchParams), [searchParams])
-  const sort = SORTS.some((s) => s.value === searchParams.get('sort')) ? searchParams.get('sort') : 'default'
-  const sectionView = Object.values(SECTION_VIEW).includes(searchParams.get('view')) ? searchParams.get('view') : SECTION_VIEW.ALL
+  // Whatever the address bar holds, once parsed and re-sanitised, is the
+  // only state this page trusts — an unknown/invalid value (?level=abc)
+  // or a redundant default (?type=all) is silently corrected here rather
+  // than left in the URL as a filter that looks selected but matches
+  // nothing.
+  const state = useMemo(() => parseExploreParams(searchParams), [searchParams])
+  useEffect(() => {
+    const canonical = sanitizeExploreParams(state)
+    if (canonical.toString() !== searchParams.toString()) {
+      setSearchParams(canonical, { replace: true })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams])
 
-  function updateParams(patch) {
-    const next = new URLSearchParams(searchParams)
-    Object.entries(patch).forEach(([key, value]) => {
-      if (isDefaultParam(key, value)) next.delete(key)
-      else next.set(key, value)
-    })
-    setSearchParams(next, { replace: true })
+  const { q: query, sort, view: sectionView } = state
+  const filters = useMemo(() => {
+    const f = { ...DEFAULT_FILTERS }
+    FILTER_KEYS.forEach((k) => { f[k] = state[k] })
+    return f
+  }, [state])
+
+  // Filter/search/sort clicks build normal browser history (so "back"
+  // undoes one change at a time); typing in the search box replaces the
+  // current entry so every keystroke doesn't create its own history
+  // entry.
+  function commit(patch, { push = false } = {}) {
+    const next = sanitizeExploreParams({ ...state, ...patch })
+    setSearchParams(next, { replace: !push })
   }
 
   function handleFilterChange(key, value) {
-    updateParams({ [key]: value })
+    // Changing what's actually being searched for should always return
+    // to the full result set — staying inside a 精選/臨打 "查看全部" view
+    // while the underlying list changes is how a filtered search ends up
+    // showing the wrong empty state.
+    commit({ [key]: value, view: SECTION_VIEW.ALL }, { push: true })
     setStoredFilters({ ...filters, [key]: value })
   }
   function handleResetFilters() {
-    const next = new URLSearchParams(searchParams)
-    FILTER_KEYS.forEach((k) => next.delete(k))
-    setSearchParams(next, { replace: true })
+    const cleared = {}
+    FILTER_KEYS.forEach((k) => { cleared[k] = FILTER_ALL })
+    commit({ ...cleared, view: SECTION_VIEW.ALL }, { push: true })
     resetStoredFilters()
   }
-  function handleQueryChange(value) { updateParams({ q: value }) }
-  function handleQueryClear() { updateParams({ q: '' }) }
-  function handleSortChange(value) { updateParams({ sort: value }) }
-  function handleSectionView(view) { updateParams({ view }) }
+  function handleQueryChange(value) { commit({ q: value, view: SECTION_VIEW.ALL }) }
+  function handleQueryClear() { commit({ q: '', view: SECTION_VIEW.ALL }) }
+  function handleSortChange(value) { commit({ sort: value }, { push: true }) }
+  function handleSectionView(view) { commit({ view }, { push: true }) }
+  function resetSearchAndFilters() {
+    const cleared = { q: '' }
+    FILTER_KEYS.forEach((k) => { cleared[k] = FILTER_ALL })
+    commit({ ...cleared, view: SECTION_VIEW.ALL }, { push: true })
+    resetStoredFilters()
+  }
 
-  const isFiltering = FILTER_KEYS.some((k) => filters[k] !== DEFAULT_FILTERS[k])
+  const isFiltering = FILTER_KEYS.some((k) => filters[k] !== FILTER_ALL)
   const isSearching = query.trim().length > 0
+  const isBrowsingHome = !isFiltering && !isSearching
+
+  // Explore only ever shows what a visitor could actually act on right
+  // now — drafts are Manage-only, and a cancelled/completed/expired event
+  // has nothing left to offer here (its own detail page still explains
+  // that state if someone follows an old link/booking to it).
+  const visibleEvents = useMemo(() => events.filter((e) => isPubliclyVisible(e)), [events])
 
   const searchedAndFiltered = useMemo(
-    () => events.filter((e) => matchesFilters(e, filters) && matchesSearch(e, query)),
-    [events, filters, query],
+    () => visibleEvents.filter((e) => matchesFilters(e, filters) && matchesSearch(e, query)),
+    [visibleEvents, filters, query],
   )
   const sorted = useMemo(() => sortEvents(searchedAndFiltered, sort), [searchedAndFiltered, sort])
-
-  const featured = useMemo(() => sorted.filter((e) => e.isFeatured), [sorted])
-  const urgent = useMemo(() => sorted.filter((e) => e.isUrgent), [sorted])
-  const more = useMemo(() => sorted.filter((e) => !e.isFeatured && !e.isUrgent), [sorted])
   const totalCount = sorted.length
 
-  function resetSearchAndFilters() {
-    const next = new URLSearchParams(searchParams)
-    FILTER_KEYS.forEach((k) => next.delete(k))
-    next.delete('q')
-    setSearchParams(next, { replace: true })
-    resetStoredFilters()
-  }
+  // Homepage categorisation only applies when nothing is being searched
+  // or filtered — and an event that's both isUrgent and isFeatured only
+  // ever appears once, in 臨打專區 (time-sensitive beats "editorially
+  // featured").
+  const urgent = useMemo(() => sorted.filter((e) => e.isUrgent), [sorted])
+  const featured = useMemo(() => sorted.filter((e) => e.isFeatured && !e.isUrgent), [sorted])
+  const more = useMemo(() => sorted.filter((e) => !e.isFeatured && !e.isUrgent), [sorted])
+
+  const resultCountText = getResultCountText(totalCount, query, isFiltering)
 
   return (
     <>
@@ -145,9 +173,27 @@ export default function Explore() {
             </button>
           </div>
 
+          {isFiltering && (
+            <div className="active-filters" aria-label="目前套用的篩選條件">
+              {FILTER_KEYS.filter((k) => filters[k] !== FILTER_ALL).map((k) => (
+                <button
+                  key={k}
+                  type="button"
+                  className="active-filter-chip"
+                  aria-label={`移除${getLabelForFilter(k, filters[k])}篩選`}
+                  onClick={() => handleFilterChange(k, FILTER_ALL)}
+                >
+                  <span aria-hidden="true">{getLabelForFilter(k, filters[k])}</span>
+                  <span className="chip-remove" aria-hidden="true"><Icon id="i-close" size={11} /></span>
+                </button>
+              ))}
+              <button type="button" className="active-filters-clear" onClick={handleResetFilters}>清除全部</button>
+            </div>
+          )}
+
           <div className="explore-toolbar">
             <p className="filter-result-count top" aria-live="polite">
-              <span>{totalCount} 場活動符合條件</span>
+              <span>{resultCountText}</span>
               {(isFiltering || isSearching) && (
                 <button type="button" className="link-btn" onClick={resetSearchAndFilters}>清除搜尋及篩選</button>
               )}
@@ -162,13 +208,26 @@ export default function Explore() {
 
           {totalCount === 0 ? (
             <p className="empty-state" role="status">
-              找不到符合搜尋與篩選條件的活動。
-              <button type="button" className="link-btn" onClick={resetSearchAndFilters}>清除搜尋及重置篩選</button>
+              {isSearching
+                ? `找不到符合「${query.trim()}」${isFiltering ? '與目前篩選條件' : ''}的活動。`
+                : '找不到符合目前篩選條件的活動。'}
+              <button type="button" className="link-btn" onClick={resetSearchAndFilters}>
+                {isSearching ? '清除搜尋及重置篩選' : '重置篩選'}
+              </button>
             </p>
+          ) : !isBrowsingHome ? (
+            // Searching or filtering collapses everything into a single
+            // list — every matching event appears exactly once, with no
+            // 精選/臨打/更多 split to keep straight.
+            <section className="strip" aria-label="搜尋與篩選結果">
+              <div className="event-grid">
+                {sorted.map((ev) => <EventCard key={ev.id} ev={ev} variant={ev.isUrgent ? 'urgent' : 'default'} />)}
+              </div>
+            </section>
           ) : sectionView === SECTION_VIEW.FEATURED ? (
-            <SectionOnly title="精選活動" list={featured} filters={filters} onBack={() => handleSectionView(SECTION_VIEW.ALL)} />
+            <SectionOnly title="精選活動" list={featured} onBack={() => handleSectionView(SECTION_VIEW.ALL)} />
           ) : sectionView === SECTION_VIEW.URGENT ? (
-            <SectionOnly title="臨打專區" list={urgent} filters={filters} onBack={() => handleSectionView(SECTION_VIEW.ALL)} urgent />
+            <SectionOnly title="臨打專區" list={urgent} onBack={() => handleSectionView(SECTION_VIEW.ALL)} urgent />
           ) : (
             <>
               {featured.length > 0 && (
@@ -180,7 +239,7 @@ export default function Explore() {
                     </button>
                   </div>
                   <div className="card-scroll">
-                    {featured.map((ev) => <EventCard key={ev.id} ev={ev} filters={filters} />)}
+                    {featured.map((ev) => <EventCard key={ev.id} ev={ev} />)}
                   </div>
                 </section>
               )}
@@ -194,18 +253,18 @@ export default function Explore() {
                     </button>
                   </div>
                   <div className="urgent-grid">
-                    {urgent.map((ev) => <UrgentCard key={ev.id} ev={ev} />)}
+                    {urgent.map((ev) => <EventCard key={ev.id} ev={ev} variant="urgent" />)}
                   </div>
                 </section>
               )}
 
               <section className="strip" id="more-events">
-                <div className="strip-head"><h2>更多活動</h2><span className="result-count">{more.length} 場符合條件</span></div>
+                <div className="strip-head"><h2>更多活動</h2><span className="result-count">{more.length} 場</span></div>
                 {more.length === 0 ? (
-                  <p className="empty-state">這個分類目前沒有符合條件的活動。</p>
+                  <p className="empty-state">目前沒有其他活動。</p>
                 ) : (
                   <div className="event-grid">
-                    {more.map((ev) => <EventCard key={ev.id} ev={ev} filters={filters} />)}
+                    {more.map((ev) => <EventCard key={ev.id} ev={ev} />)}
                   </div>
                 )}
               </section>
@@ -228,7 +287,7 @@ export default function Explore() {
   )
 }
 
-function SectionOnly({ title, list, filters, onBack, urgent = false }) {
+function SectionOnly({ title, list, onBack, urgent = false }) {
   return (
     <section className="strip">
       <div className="strip-head">
@@ -239,29 +298,11 @@ function SectionOnly({ title, list, filters, onBack, urgent = false }) {
       <h2 className="section-only-title">{title}</h2>
       {list.length === 0 ? (
         <p className="empty-state">目前沒有符合條件的{title}。</p>
-      ) : urgent ? (
-        <div className="urgent-grid">{list.map((ev) => <UrgentCard key={ev.id} ev={ev} />)}</div>
       ) : (
-        <div className="event-grid">{list.map((ev) => <EventCard key={ev.id} ev={ev} filters={filters} />)}</div>
+        <div className={urgent ? 'urgent-grid' : 'event-grid'}>
+          {list.map((ev) => <EventCard key={ev.id} ev={ev} variant={urgent ? 'urgent' : 'default'} />)}
+        </div>
       )}
     </section>
-  )
-}
-
-function UrgentCard({ ev }) {
-  return (
-    <article className="card urgent-card">
-      <div className="card-top"><span className="badge live"><i />急徵隊友</span></div>
-      <Link to={`/event/${ev.id}`}><h3>{ev.title}</h3></Link>
-      <ul className="meta">
-        <li><Icon id="i-pin" size={14} />{ev.venueName}</li>
-        <li><Icon id="i-clock" size={14} />{ev.date === new Date().toISOString().slice(0, 10) ? '今天' : ev.date} {ev.startTime}</li>
-        <li><Icon id="i-users" size={14} />{ev.registeredCount} / {ev.capacity} 人</li>
-      </ul>
-      <div className="card-foot">
-        <span className="price">{formatPrice(ev.price)}</span>
-        <Link to={`/event/${ev.id}`} className="btn-cta urgent">立刻加入</Link>
-      </div>
-    </article>
   )
 }

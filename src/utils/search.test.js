@@ -45,4 +45,19 @@ describe('matchesSearch', () => {
   it('does not match unrelated text', () => {
     expect(matchesSearch(event, '沙灘排球')).toBe(false)
   })
+
+  it('requires every keyword to match (AND), even when they are not adjacent in the source text', () => {
+    // "台北" is only in venue/address/city; "中階" is only in level — a
+    // naive substring check on the raw query would fail this even though
+    // the event genuinely satisfies both keywords.
+    expect(matchesSearch(event, '台北 中階')).toBe(true)
+  })
+
+  it('rejects when only some of several keywords match', () => {
+    expect(matchesSearch(event, '台北 高階')).toBe(false)
+  })
+
+  it('is insensitive to keyword order and extra whitespace between them', () => {
+    expect(matchesSearch(event, '中階   台北')).toBe(true)
+  })
 })

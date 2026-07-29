@@ -58,7 +58,7 @@ export default function Header({
           />
           {searchValue && (
             <button type="button" className="header-search-clear" aria-label="清除搜尋" onClick={handleClear}>
-              <Icon id="i-chevron" size={12} />
+              <Icon id="i-close" size={12} />
             </button>
           )}
         </div>

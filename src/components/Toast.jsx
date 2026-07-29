@@ -13,7 +13,7 @@ export default function ToastViewport() {
         <div key={t.id} className={`toast toast-${t.tone}`}>
           <span>{t.message}</span>
           <button type="button" className="toast-close" aria-label="關閉通知" onClick={() => dismissToast(t.id)}>
-            <Icon id="i-chevron" size={13} />
+            <Icon id="i-close" size={13} />
           </button>
         </div>
       ))}

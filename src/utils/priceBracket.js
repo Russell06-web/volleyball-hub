@@ -2,15 +2,16 @@ import { FILTER_ALL } from '../constants/taxonomy'
 
 // Shared price-bracket matching so the hard filter (FilterPanel) and the
 // match-state reasoning (matchState.js) can never disagree about what
-// "300to500" means. Boundaries are inclusive on both sides on purpose —
-// an event priced exactly NT$300 counts under both "under300" and
-// "300to500", same for NT$500 — so nothing sits in a dead zone between
-// brackets.
+// "underOrEqual300" means. Brackets are mutually exclusive: NT$300 only
+// ever matches underOrEqual300, NT$500 only ever matches
+// between301And500 — nothing sits in two brackets, and free (price 0)
+// is its own bracket rather than the bottom of the cheapest paid one.
 export function matchesPriceBracket(price, bracket) {
   switch (bracket) {
-    case 'under300': return price <= 300
-    case '300to500': return price >= 300 && price <= 500
-    case 'over500': return price >= 500
+    case 'free': return price === 0
+    case 'underOrEqual300': return price >= 1 && price <= 300
+    case 'between301And500': return price >= 301 && price <= 500
+    case 'over500': return price >= 501
     default: return true // FILTER_ALL / unknown bracket
   }
 }

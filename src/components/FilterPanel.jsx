@@ -20,10 +20,17 @@ function iconForType(value) {
   }
 }
 
+// Explore's hard filter is strict on purpose: when the user has
+// explicitly chosen a level or gender, an event the organiser left "open"
+// (unspecified) does NOT count as a match — it goes to EventDetail's
+// condition-match explanation instead, which can say "主辦方未限制，仍需
+// 自行確認". Silently treating "open" as "matches anything" here would
+// mean Explore's filtered list and EventDetail's match-state could
+// disagree about the same event.
 export function matchesFilters(ev, f) {
   if (f.type !== FILTER_ALL && ev.type !== f.type) return false
-  if (f.gender !== FILTER_ALL && ev.gender !== f.gender && ev.gender !== 'open') return false
-  if (f.level !== FILTER_ALL && ev.level !== f.level && ev.level !== 'open') return false
+  if (f.gender !== FILTER_ALL && ev.gender !== f.gender) return false
+  if (f.level !== FILTER_ALL && ev.level !== f.level) return false
   if (f.city !== FILTER_ALL && ev.city !== f.city) return false
   if (!matchesPriceBracket(ev.price, f.price)) return false
   return true

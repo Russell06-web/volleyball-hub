@@ -54,7 +54,7 @@ describe('getMatchResult', () => {
   })
 
   it('never returns more than 3 reasons', () => {
-    const filters = { type: 'indoor', gender: 'female', level: 'intermediate', city: 'taipei', price: 'under300' }
+    const filters = { type: 'indoor', gender: 'female', level: 'intermediate', city: 'taipei', price: 'underOrEqual300' }
     const result = getMatchResult(baseEvent, filters)
     expect(result.reasons.length).toBeLessThanOrEqual(3)
   })

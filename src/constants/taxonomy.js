@@ -43,10 +43,15 @@ export const CITIES = [
   { value: 'taoyuan', label: '桃園' },
 ]
 
+// Mutually exclusive on purpose — every price maps to exactly one
+// bracket, never two. "免費" is its own bracket rather than the bottom of
+// "NT$1–300" because a free activity is a different decision for most
+// people than a NT$50 one.
 export const PRICE_BRACKETS = [
-  { value: 'under300', label: 'NT$300 以下' },
-  { value: '300to500', label: 'NT$300–500' },
-  { value: 'over500', label: 'NT$500 以上' },
+  { value: 'free', label: '免費' },
+  { value: 'underOrEqual300', label: 'NT$1–300' },
+  { value: 'between301And500', label: 'NT$301–500' },
+  { value: 'over500', label: 'NT$501 以上' },
 ]
 
 export const SORTS = [

@@ -47,8 +47,11 @@
   .filter-modal-sheet{max-width:440px; border-radius:20px; max-height:80vh;}
 }
 
-/* urgent (live pickup game) cards */
+/* urgent (live pickup game) cards — EventCard variant="urgent" rendered
+   in a grid, not the horizontal card-scroll strip, so its fixed
+   scroll-strip width/flex needs resetting back to fill the grid cell. */
 .urgent-grid{display:grid; grid-template-columns:1fr; gap:12px;}
+.urgent-grid .event-card{width:auto; flex:auto;}
 .urgent-card{border-left:3px solid var(--error);}
 @media (min-width: 640px){ .urgent-grid{grid-template-columns:repeat(2,1fr);} }
 
@@ -84,8 +87,20 @@
 .back-to-all{display:inline-flex; align-items:center; gap:4px;}
 .section-only-title{font-size:16px; margin-bottom:12px;}
 
-/* explainable condition-match state + reasons (event cards) */
 #more-events{scroll-margin-top:calc(var(--header-h) + 12px);}
-.match-block{display:flex; flex-direction:column; gap:6px;}
-.match-reasons{display:flex; flex-wrap:wrap; gap:6px;}
-.tag.reason{background:transparent; border:1px solid var(--border); color:var(--text-muted);}
+
+/* active filter chips — mobile-visible summary of what's currently
+   applied, since city/level/gender/price all live inside a modal once
+   closed and would otherwise be invisible. */
+.active-filters{display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-bottom:16px;}
+.active-filter-chip{
+  display:inline-flex; align-items:center; gap:6px; padding:6px 8px 6px 14px;
+  border-radius:var(--r-pill); background:var(--primary-tint); color:var(--primary-dark);
+  font-size:12.5px; font-weight:700; border:none;
+}
+.active-filter-chip .chip-remove{
+  flex:none; width:20px; height:20px; border-radius:50%; border:none;
+  background:rgba(255,255,255,.55); color:inherit; display:flex; align-items:center; justify-content:center;
+}
+.active-filter-chip .chip-remove:hover{background:#fff;}
+.active-filters-clear{font-size:12.5px; font-weight:700; color:var(--text-muted); background:none; border:none; text-decoration:underline;}

@@ -24,6 +24,7 @@ export default function Icons() {
       <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><line x1="12" y1="11" x2="12" y2="16.5" /><circle cx="12" cy="7.8" r="0.4" fill="currentColor" /></symbol>
       <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="7" x2="20" y2="7" /><path d="M9 7V4.5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1V7" /><path d="M6.5 7 7.3 19a2 2 0 0 0 2 1.8h5.4a2 2 0 0 0 2-1.8L17.5 7" /><line x1="10" y1="11" x2="10" y2="16.5" /><line x1="14" y1="11" x2="14" y2="16.5" /></symbol>
       <symbol id="i-ball" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9.2" /><path d="M12 2.8c3 2 4.6 5.4 4.4 9.2M12 2.8c-3 2-4.6 5.4-4.4 9.2M3 9.6c3.4-1.4 7-1 9 2.4M21 9.6c-3.4-1.4-7-1-9 2.4M4.3 16.5c1.4-3.2 4.4-4.6 7.7-4.1M19.7 16.5c-1.4-3.2-4.4-4.6-7.7-4.1" /></symbol>
+      <symbol id="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="6" y1="6" x2="18" y2="18" /><line x1="18" y1="6" x2="6" y2="18" /></symbol>
       <symbol id="i-logo" viewBox="0 0 100 130">
         <path d="M50 122 C34 100 12 80 12 44 A38 38 0 1 1 88 44 C88 80 66 100 50 122 Z" fill="#FF6B1A" />
         <circle cx="50" cy="44" r="35.5" fill="#FFFFFF" />

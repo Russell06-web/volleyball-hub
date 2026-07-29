@@ -27,7 +27,7 @@ function eventValueLabel(ev, key) {
   return ev[key]
 }
 
-// Filters store a price *bracket* ("under300"), not a number, so it needs
+// Filters store a price *bracket* ("underOrEqual300"), not a number, so it needs
 // its own label lookup rather than formatPrice — sharing eventValueLabel
 // for both sides of the "你的篩選 / 活動" comparison would try to format
 // a bracket string as if it were a price.
@@ -201,7 +201,7 @@ export default function EventDetail() {
                     <Icon id={c.met ? 'i-check' : 'i-info'} size={16} className={c.met ? 'ok' : 'muted'} />
                     <div>
                       <b>{DIMENSION_LABEL[c.key]}</b>
-                      <span>你的篩選：{filterValueLabel(c.key, filters[c.key])}　活動：{c.unspecified ? `主辦方未限制${DIMENSION_LABEL[c.key]}` : eventValueLabel(event, c.key)}</span>
+                      <span>你的篩選：{filterValueLabel(c.key, filters[c.key])}　活動：{c.unspecified ? `主辦方未限制${DIMENSION_LABEL[c.key]}，仍需自行確認` : eventValueLabel(event, c.key)}</span>
                     </div>
                   </li>
                 ))}
