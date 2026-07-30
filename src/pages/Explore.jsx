@@ -6,7 +6,10 @@ import SiteFooter from '../components/SiteFooter'
 import FilterPanel, { matchesFilters } from '../components/FilterPanel'
 import FilterModal from '../components/FilterModal'
 import SaveSearchDialog from '../components/SaveSearchDialog'
+import ActiveFiltersSummary from '../components/ActiveFiltersSummary'
 import EventCard from '../components/EventCard'
+import EventListRow from '../components/EventListRow'
+import UrgentTimeline from '../components/UrgentTimeline'
 import { Icon } from '../components/Icons'
 import { useEvents } from '../context/EventsContext'
 import { usePreferences } from '../context/PreferencesContext'
@@ -21,8 +24,12 @@ import { useSearchInput } from '../hooks/useSearchInput'
 import { matchesSearch } from '../utils/search'
 import { sortEvents } from '../utils/sortEvents'
 import { isPubliclyVisible } from '../utils/eventStatus'
+import { getHeroAvailabilityCounts, getHeroAvailabilityText } from '../utils/heroAvailability'
+import { getResultsHeaderHeading, getResultsHeaderMeta } from '../utils/resultsHeader'
 import { getAlternativeFilterSuggestions } from '../utils/alternativeFilters'
-import { savedSearchToQueryString } from '../utils/savedSearches'
+import { savedSearchToQueryString, summarizeSavedSearchFilters } from '../utils/savedSearches'
+import { groupEventsByTaipeiDate } from '../utils/groupEventsByTaipeiDate'
+import { useExploreLayout } from '../hooks/useExploreLayout'
 import '../styles/explore.css'
 
 const QUICK_TYPES = [{ value: FILTER_ALL, label: '全部' }, ...EVENT_TYPES]
@@ -37,35 +44,86 @@ const QUICK_TYPES = [{ value: FILTER_ALL, label: '全部' }, ...EVENT_TYPES]
 function buildQuickEntries(profile) {
   const hasRealPosition = profile.defaultPosition && profile.defaultPosition !== 'universal'
   return [
-    { key: 'today', label: '今天臨打', patch: { dateRange: 'today' } },
-    { key: 'weekend', label: '週末球局', patch: { dateRange: 'weekend' } },
-    { key: 'intermediate', label: '中階活動', patch: { level: 'intermediate' } },
-    { key: 'myPosition', label: '我需要的位置', patch: hasRealPosition ? { position: profile.defaultPosition } : null },
+    { key: 'today', label: '今天臨打', icon: 'i-clock', patch: { dateRange: 'today', urgentOnly: 'true' } },
+    { key: 'weekend', label: '週末球局', icon: 'i-calendar', patch: { dateRange: 'weekend' } },
+    { key: 'intermediate', label: '中階活動', icon: 'i-trend', patch: { level: 'intermediate' } },
+    { key: 'myPosition', label: '我需要的位置', icon: 'i-users', patch: hasRealPosition ? { position: profile.defaultPosition } : null },
   ]
 }
 
-function getResultCountText(count, query, isFiltering) {
-  const trimmed = query.trim()
-  if (trimmed && isFiltering) return `「${trimmed}」在目前條件下找到 ${count} 場活動`
-  if (trimmed) return `「${trimmed}」找到 ${count} 場活動`
-  if (isFiltering) return `${count} 場活動符合目前條件`
-  return `共 ${count} 場活動`
+// Shared by the Hero's full search box and the mobile compact search bar
+// (see below) — both are just different visual shells around the exact
+// same useSearchInput handlers, so the two inputs can never drift out of
+// sync or maintain a second copy of "what is currently typed".
+function ExploreSearchField({ compact, value, onChange, onCommit, onClear, placeholder }) {
+  function handleKeyDown(e) {
+    if (e.key === 'Escape' && value) {
+      e.preventDefault()
+      onClear()
+      return
+    }
+    if (e.key === 'Enter') onCommit()
+  }
+  return (
+    <label className={compact ? 'compact-search-bar' : 'explore-hero-search'}>
+      <span className="sr-only">搜尋活動</span>
+      <Icon id="i-search" size={compact ? 16 : 17} />
+      <input
+        type="search"
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onKeyDown={handleKeyDown}
+        onBlur={onCommit}
+      />
+      {value && (
+        <button type="button" aria-label="清除搜尋" onClick={onClear}>
+          <Icon id="i-close" size={13} />
+        </button>
+      )}
+    </label>
+  )
 }
 
-function getResultsHeading(isSearching, isFiltering, query) {
-  if (isSearching && isFiltering) return '搜尋與篩選結果'
-  if (isSearching) return `「${query.trim()}」的搜尋結果`
-  return '篩選結果'
+// Card/List display-mode switch — shared between the unified search/
+// filter result list and 更多活動's date groups (Featured/Urgent/saved-
+// search strips are editorial, not part of this toggle). Both buttons
+// stay in the DOM (not one stateful icon) so each mode has its own
+// unambiguous label for assistive tech, with aria-pressed marking which
+// one is active.
+function LayoutToggle({ layout, onChange }) {
+  return (
+    <div className="layout-toggle" role="group" aria-label="顯示模式">
+      <button type="button" className={layout === 'grid' ? 'active' : ''} aria-pressed={layout === 'grid'} onClick={() => onChange('grid')}>
+        <Icon id="i-home" size={14} />卡片
+      </button>
+      <button type="button" className={layout === 'list' ? 'active' : ''} aria-pressed={layout === 'list'} onClick={() => onChange('list')}>
+        <Icon id="i-filter" size={14} />清單
+      </button>
+    </div>
+  )
+}
+
+function EventListing({ list, layout }) {
+  if (layout === 'list') {
+    return <div className="event-list">{list.map((ev) => <EventListRow key={ev.id} ev={ev} />)}</div>
+  }
+  return <div className="event-grid">{list.map((ev) => <EventCard key={ev.id} ev={ev} variant={ev.isUrgent ? 'urgent' : 'default'} />)}</div>
 }
 
 export default function Explore() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [filterOpen, setFilterOpen] = useState(false)
+  // One-shot hint for FilterModal — set only by "我需要的位置" when the
+  // visitor has no real default position to apply directly, cleared on
+  // every close so a later generic "更多篩選" open never inherits it.
+  const [filterFocus, setFilterFocus] = useState(null)
   const [saveSearchOpen, setSaveSearchOpen] = useState(false)
   const { filters: storedFilters, setFilters: setStoredFilters, resetFilters: resetStoredFilters } = usePreferences()
   const { events } = useEvents()
   const { profile } = useProfile()
   const { savedSearches } = useSavedSearches()
+  const { layout, setLayout } = useExploreLayout()
   const seededRef = useRef(false)
 
   useEffect(() => {
@@ -144,7 +202,14 @@ export default function Explore() {
     setStoredFilters({ ...filters, [key]: value })
   }
   function handleQuickEntry(patch) {
-    if (!patch) { setFilterOpen(true); return }
+    // Only "我需要的位置" (without a real default position set) ever sends
+    // a null patch — open the sheet already pointed at 排球條件/位置需求
+    // instead of leaving a visitor to hunt through 基本條件 for it.
+    if (!patch) {
+      setFilterFocus({ initialSection: 'volleyball', focusField: 'position' })
+      setFilterOpen(true)
+      return
+    }
     const basicPatch = {}
     Object.keys(patch).forEach((k) => { if (k in DEFAULT_FILTERS) basicPatch[k] = patch[k] })
     commit({ ...patch, view: SECTION_VIEW.ALL }, { push: true })
@@ -188,6 +253,7 @@ export default function Explore() {
   // has nothing left to offer here (its own detail page still explains
   // that state if someone follows an old link/booking to it).
   const visibleEvents = useMemo(() => events.filter((e) => isPubliclyVisible(e)), [events])
+  const heroAvailabilityText = useMemo(() => getHeroAvailabilityText(getHeroAvailabilityCounts(events)), [events])
 
   function getResultCountForFilters(candidateFilters) {
     return visibleEvents.filter((e) => matchesFilters(e, candidateFilters) && matchesSearch(e, query)).length
@@ -223,14 +289,19 @@ export default function Explore() {
   const urgent = useMemo(() => sorted.filter((e) => e.isUrgent), [sorted])
   const featured = useMemo(() => sorted.filter((e) => e.isFeatured && !e.isUrgent), [sorted])
   const more = useMemo(() => sorted.filter((e) => !e.isFeatured && !e.isUrgent), [sorted])
+  const moreByDate = useMemo(() => groupEventsByTaipeiDate(more), [more])
 
-  const resultCountText = getResultCountText(totalCount, query, isFiltering)
+  const activeFilterKeys = useMemo(() => FILTER_KEYS.filter((k) => filters[k] !== FILTER_ALL), [filters])
+  const resultsHeaderHeading = getResultsHeaderHeading(isSearching, isFiltering, query)
+  const resultsHeaderMeta = getResultsHeaderMeta({
+    isSearching, isFiltering, query, count: totalCount, appliedFilterCount: activeFilterKeys.length,
+  })
 
   return (
     <>
       <Header
         title="排球探索"
-        subtitle={isFiltering || isSearching ? '符合目前搜尋與篩選條件' : '發現精彩活動'}
+        subtitle="發現精彩活動"
         active="explore"
         showSearch
         searchValue={searchInput}
@@ -245,24 +316,14 @@ export default function Explore() {
           <div className="explore-hero-body">
             <h1>找到適合你的下一場球</h1>
             <p className="explore-hero-sub">依地區、程度、位置與時間，快速找到可以加入的排球活動。</p>
-            <label className="explore-hero-search">
-              <span className="sr-only">搜尋活動</span>
-              <Icon id="i-search" size={17} />
-              <input
-                type="search"
-                placeholder="搜尋球館、地區或活動"
-                value={searchInput}
-                onChange={(e) => handleSearchInputChange(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') commitSearchNow() }}
-                onBlur={commitSearchNow}
-              />
-              {searchInput && (
-                <button type="button" aria-label="清除搜尋" onClick={clearSearchInput}>
-                  <Icon id="i-close" size={13} />
-                </button>
-              )}
-            </label>
-            <p className="explore-hero-stat">{visibleEvents.length} 場開放中的活動，隨時可以加入</p>
+            <ExploreSearchField
+              value={searchInput}
+              onChange={handleSearchInputChange}
+              onCommit={commitSearchNow}
+              onClear={clearSearchInput}
+              placeholder="搜尋球館、地區或活動"
+            />
+            <p className="explore-hero-stat">{heroAvailabilityText}</p>
           </div>
         </div>
       )}
@@ -270,8 +331,8 @@ export default function Explore() {
       {isBrowsingHome && (
         <div className="quick-entry-row" aria-label="快速入口">
           {buildQuickEntries(profile).map((entry) => (
-            <button key={entry.key} type="button" className="quick-entry-chip" onClick={() => handleQuickEntry(entry.patch)}>
-              {entry.label}
+            <button key={entry.key} type="button" className="quick-entry-shortcut" onClick={() => handleQuickEntry(entry.patch)}>
+              <Icon id={entry.icon} size={16} />{entry.label}
             </button>
           ))}
         </div>
@@ -300,43 +361,54 @@ export default function Explore() {
             </button>
           </div>
 
+          {/* Hero owns the full search box on the browsing-home state; the
+              moment there's a search or filter active, Hero disappears —
+              this compact bar is what keeps a mobile visitor (Header's own
+              search is hidden below 640px) able to edit their query at all.
+              Never rendered alongside Hero, and hidden again by CSS once
+              Header's search becomes visible (>=640px), so there's never
+              two search boxes on screen at once. */}
+          {!isBrowsingHome && (
+            <ExploreSearchField
+              compact
+              value={searchInput}
+              onChange={handleSearchInputChange}
+              onCommit={commitSearchNow}
+              onClear={clearSearchInput}
+              placeholder="搜尋球館、地區或活動"
+            />
+          )}
+
           {isFiltering && (
-            <div className="active-filters" aria-label="目前套用的篩選條件">
-              {FILTER_KEYS.filter((k) => filters[k] !== FILTER_ALL).map((k) => (
-                <button
-                  key={k}
-                  type="button"
-                  className="active-filter-chip"
-                  aria-label={`移除${getLabelForFilter(k, filters[k])}篩選`}
-                  onClick={() => handleFilterChange(k, FILTER_ALL)}
-                >
-                  <span aria-hidden="true">{getLabelForFilter(k, filters[k])}</span>
-                  <span className="chip-remove" aria-hidden="true"><Icon id="i-close" size={11} /></span>
-                </button>
-              ))}
-              <button type="button" className="active-filters-clear" onClick={handleResetFilters}>清除全部</button>
-              <button type="button" className="link-btn save-search-trigger" onClick={() => setSaveSearchOpen(true)}>儲存這組條件</button>
+            <ActiveFiltersSummary
+              items={activeFilterKeys.map((k) => ({ key: k, label: getLabelForFilter(k, filters[k]) }))}
+              onRemove={(k) => handleFilterChange(k, FILTER_ALL)}
+              onClearAll={handleResetFilters}
+              onSaveSearch={() => setSaveSearchOpen(true)}
+            />
+          )}
+
+          {!isBrowsingHome && (
+            <div className="results-header">
+              <div>
+                <h1>{resultsHeaderHeading}</h1>
+                <p className="results-header-meta">
+                  <span aria-live="polite">{resultsHeaderMeta}</span>
+                  <button type="button" className="link-btn" onClick={resetSearchAndFilters}>清除搜尋及篩選</button>
+                </p>
+              </div>
+              <label className="sort-select">
+                <span className="sr-only">排序方式</span>
+                <select value={sort} onChange={(e) => handleSortChange(e.target.value)}>
+                  {SORTS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+                </select>
+              </label>
             </div>
           )}
 
-          <div className="explore-toolbar">
-            <p className="filter-result-count top" aria-live="polite">
-              <span>{resultCountText}</span>
-              {(isFiltering || isSearching) && (
-                <button type="button" className="link-btn" onClick={resetSearchAndFilters}>清除搜尋及篩選</button>
-              )}
-            </p>
-            <label className="sort-select">
-              <span className="sr-only">排序方式</span>
-              <select value={sort} onChange={(e) => handleSortChange(e.target.value)}>
-                {SORTS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
-              </select>
-            </label>
-          </div>
-
-          {totalCount === 0 ? (
-            <div className="empty-state-block" role="status">
-              <p className="empty-state">
+          {totalCount === 0 && !isBrowsingHome ? (
+            <div className="empty-state-block">
+              <p className="empty-state" role="status" aria-live="polite">
                 {isSearching
                   ? `找不到符合「${query.trim()}」${isFiltering ? '與目前篩選條件' : ''}的活動。`
                   : '找不到符合目前篩選條件的活動。'}
@@ -357,17 +429,21 @@ export default function Explore() {
                 {isSearching ? '清除搜尋及重置篩選' : '重置篩選'}
               </button>
             </div>
+          ) : totalCount === 0 ? (
+            // isBrowsingHome with zero total events at all (empty demo data) —
+            // there's no search/filter to reset, so no alternative-suggestion
+            // or reset affordance applies here.
+            <div className="empty-state-block">
+              <p className="empty-state" role="status" aria-live="polite">目前沒有開放中的活動。</p>
+            </div>
           ) : !isBrowsingHome ? (
             // Searching or filtering collapses everything into a single
             // list — every matching event appears exactly once, with no
-            // 精選/臨打/更多 split to keep straight.
+            // 精選/臨打/更多 split to keep straight. Respects the Grid/List
+            // display preference, same as 更多活動 below.
             <section className="strip" aria-label="搜尋與篩選結果">
-              <div className="results-heading-row">
-                <h2>{getResultsHeading(isSearching, isFiltering, query)}</h2>
-              </div>
-              <div className="event-grid">
-                {sorted.map((ev) => <EventCard key={ev.id} ev={ev} variant={ev.isUrgent ? 'urgent' : 'default'} />)}
-              </div>
+              <LayoutToggle layout={layout} onChange={setLayout} />
+              <EventListing list={sorted} layout={layout} />
             </section>
           ) : sectionView === SECTION_VIEW.FEATURED ? (
             <SectionOnly title="精選活動" list={featured} onBack={() => handleSectionView(SECTION_VIEW.ALL)} variant="featured" />
@@ -383,22 +459,41 @@ export default function Explore() {
                       查看全部 <Icon id="i-chevron" size={14} />
                     </button>
                   </div>
-                  <div className="urgent-grid">
-                    {urgent.map((ev) => <EventCard key={ev.id} ev={ev} variant="urgent" />)}
-                  </div>
+                  {/* Time and position shortage matter more than a card
+                      grid here — see UrgentTimeline.jsx. Still the exact
+                      same EventCard business logic underneath, just a
+                      schedule-list presentation. */}
+                  <UrgentTimeline events={urgent} />
                 </section>
               )}
 
               {featured.length > 0 && (
-                <section className="strip">
+                <section className="strip surface-band">
                   <div className="strip-head">
                     <h2>精選活動</h2>
-                    <button type="button" className="see-all" onClick={() => handleSectionView(SECTION_VIEW.FEATURED)}>
-                      查看全部 <Icon id="i-chevron" size={14} />
-                    </button>
+                    {featured.length > 3 && (
+                      <button type="button" className="see-all" onClick={() => handleSectionView(SECTION_VIEW.FEATURED)}>
+                        查看全部 <Icon id="i-chevron" size={14} />
+                      </button>
+                    )}
                   </div>
-                  <div className="card-scroll">
-                    {featured.map((ev) => <EventCard key={ev.id} ev={ev} variant="featured" />)}
+                  {/* Mobile keeps a horizontal scroll of the same cards
+                      (never forcing the asymmetric 2-column layout into a
+                      narrow viewport); desktop switches to a lead + up-to-2
+                      compact secondary cards. Both render the exact same
+                      EventCard — no separate lead/secondary component. */}
+                  <div className="featured-mobile-scroll">
+                    {featured.slice(0, 3).map((ev) => <EventCard key={ev.id} ev={ev} variant="featured" />)}
+                  </div>
+                  <div className="featured-layout">
+                    <div className="featured-lead">
+                      <EventCard ev={featured[0]} variant="featured" />
+                    </div>
+                    {featured.length > 1 && (
+                      <div className="featured-secondary">
+                        {featured.slice(1, 3).map((ev) => <EventCard key={ev.id} ev={ev} variant="featured" compact />)}
+                      </div>
+                    )}
                   </div>
                 </section>
               )}
@@ -406,24 +501,36 @@ export default function Explore() {
               {savedSearches.length > 0 && (
                 <section className="strip saved-search-strip">
                   <div className="strip-head"><h2>常用的探索條件</h2></div>
-                  <div className="saved-search-chip-row">
+                  <ul className="saved-search-card-list">
                     {savedSearches.map((s) => (
-                      <Link key={s.id} to={`/explore${savedSearchToQueryString(s)}`} className="saved-search-entry-chip">
-                        <Icon id="i-filter" size={13} />{s.name}
-                      </Link>
+                      <li key={s.id}>
+                        <Link to={`/explore${savedSearchToQueryString(s)}`} className="saved-search-card">
+                          <Icon id="i-filter" size={15} />
+                          <span className="saved-search-card-text">
+                            <b>{s.name}</b>
+                            <span>{summarizeSavedSearchFilters(s)}</span>
+                          </span>
+                        </Link>
+                      </li>
                     ))}
-                  </div>
+                  </ul>
                 </section>
               )}
 
-              <section className="strip" id="more-events">
-                <div className="strip-head"><h2>全部活動</h2><span className="result-count">{more.length} 場</span></div>
+              <section className="strip surface-band-alt" id="more-events" aria-label="更多活動">
+                <div className="strip-head"><h2>更多活動</h2><span className="result-count">{more.length} 場</span></div>
                 {more.length === 0 ? (
-                  <p className="empty-state">目前沒有其他活動。</p>
+                  <p className="empty-state">目前沒有更多活動。</p>
                 ) : (
-                  <div className="event-grid">
-                    {more.map((ev) => <EventCard key={ev.id} ev={ev} />)}
-                  </div>
+                  <>
+                    <LayoutToggle layout={layout} onChange={setLayout} />
+                    {moreByDate.map((group) => (
+                      <div key={group.date} className="date-group">
+                        <h3 className="date-group-heading">{group.label}</h3>
+                        <EventListing list={group.events} layout={layout} />
+                      </div>
+                    ))}
+                  </>
                 )}
               </section>
             </>
@@ -435,10 +542,12 @@ export default function Explore() {
       <BottomTabs active="explore" />
       <FilterModal
         open={filterOpen}
-        onClose={() => setFilterOpen(false)}
+        onClose={() => { setFilterOpen(false); setFilterFocus(null) }}
         filters={filters}
         onApply={handleApplyFilters}
         getResultCountForFilters={getResultCountForFilters}
+        initialSection={filterFocus?.initialSection}
+        focusField={filterFocus?.focusField}
       />
       <SaveSearchDialog
         open={saveSearchOpen}
@@ -461,8 +570,10 @@ function SectionOnly({ title, list, onBack, variant = 'default' }) {
       <h2 className="section-only-title">{title}</h2>
       {list.length === 0 ? (
         <p className="empty-state">目前沒有符合條件的{title}。</p>
+      ) : isUrgent ? (
+        <UrgentTimeline events={list} />
       ) : (
-        <div className={isUrgent ? 'urgent-grid' : 'event-grid'}>
+        <div className="event-grid">
           {list.map((ev) => <EventCard key={ev.id} ev={ev} variant={variant} />)}
         </div>
       )}

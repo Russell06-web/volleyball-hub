@@ -69,6 +69,7 @@ export function matchesFilters(ev, f) {
   if (f.rotation === 'true' && !ev.rotationRequired) return false
   if (f.soloJoin === 'true' && !ev.soloJoinAllowed) return false
   if (f.equipment && f.equipment !== FILTER_ALL && !(ev.equipmentProvided || []).includes(f.equipment)) return false
+  if (f.urgentOnly === 'true' && !ev.isUrgent) return false
 
   return true
 }
@@ -106,6 +107,7 @@ function BasicFilterFields({ filters, onChange }) {
       <div className="filter-group">
         <h3>活動類型</h3>
         <OptionGrid options={TYPE_OPTIONS} value={filters.type} field="type" onChange={onChange} variant="type" />
+        <ToggleChip label="僅看臨打" active={filters.urgentOnly === 'true'} onToggle={() => onChange('urgentOnly', filters.urgentOnly === 'true' ? FILTER_ALL : 'true')} />
       </div>
 
       <div className="filter-group">
@@ -153,7 +155,7 @@ function BasicFilterFields({ filters, onChange }) {
 function VolleyballConditionFields({ filters, onChange }) {
   return (
     <>
-      <div className="filter-group">
+      <div className="filter-group" data-filter-field="position">
         <h3>位置需求</h3>
         <OptionGrid options={POSITION_OPTIONS} value={filters.position} field="position" onChange={onChange} variant="chip" />
       </div>
@@ -201,8 +203,15 @@ function VenueEquipmentFields({ filters, onChange }) {
 // sections — 基本條件 (open by default) / 排球條件 / 場地與設備 — so a
 // first-time visitor sees 6 simple controls, not 16, per the progressive-
 // disclosure brief.
+//
+// `initialSection` only matters for layout="modal": when it's 'volleyball'
+// (set by Explore's "我需要的位置" quick entry when the visitor has no
+// real default position to apply directly), the 排球條件 accordion also
+// opens by default alongside 基本條件 — a normal filter-trigger open
+// passes no initialSection, so it always starts from 基本條件 only, per
+// the "don't jump to position on a generic open" rule.
 export default function FilterPanel({
-  heading = '篩選活動', filters, onChange, onApply, onReset, resultCount, isFiltering, applyLabel, layout = 'sidebar',
+  heading = '篩選活動', filters, onChange, onApply, onReset, resultCount, isFiltering, applyLabel, layout = 'sidebar', initialSection = null,
 }) {
   const resultCountText = isFiltering ? `${resultCount} 場活動符合條件` : `共 ${resultCount} 場活動`
 
@@ -215,7 +224,7 @@ export default function FilterPanel({
           <AccordionSection title="基本條件" defaultOpen>
             <BasicFilterFields filters={filters} onChange={onChange} />
           </AccordionSection>
-          <AccordionSection title="排球條件">
+          <AccordionSection title="排球條件" defaultOpen={initialSection === 'volleyball'}>
             <VolleyballConditionFields filters={filters} onChange={onChange} />
           </AccordionSection>
           <AccordionSection title="場地與設備">

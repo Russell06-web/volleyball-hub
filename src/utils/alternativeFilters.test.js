@@ -38,10 +38,10 @@ function ev(overrides) {
 }
 
 const EVENTS = [
-  ev({ id: 'e1', city: 'taipei', level: 'intermediate', price: 200, type: 'indoor' }),
-  ev({ id: 'e2', city: 'newTaipei', level: 'intermediate', price: 200, type: 'indoor' }),
-  ev({ id: 'e3', city: 'newTaipei', level: 'open', price: 400, type: 'indoor' }),
-  ev({ id: 'e4', city: 'taoyuan', level: 'beginner', price: 600, type: 'beach' }),
+  ev({ id: 'e1', city: 'taipei', level: 'intermediate', price: 200, type: 'indoor', isUrgent: false }),
+  ev({ id: 'e2', city: 'newTaipei', level: 'intermediate', price: 200, type: 'indoor', isUrgent: false }),
+  ev({ id: 'e3', city: 'newTaipei', level: 'open', price: 400, type: 'indoor', isUrgent: false }),
+  ev({ id: 'e4', city: 'taoyuan', level: 'beginner', price: 600, type: 'beach', isUrgent: false }),
 ]
 
 describe('getAlternativeFilterSuggestions', () => {
@@ -108,6 +108,18 @@ describe('getAlternativeFilterSuggestions', () => {
     for (let i = 1; i < suggestions.length; i += 1) {
       expect(suggestions[i - 1].resultCount).toBeGreaterThanOrEqual(suggestions[i].resultCount)
     }
+  })
+
+  it('suggests removing urgentOnly when no urgent event matches, using the same drop-a-filter path as any other dimension', () => {
+    const state = { ...DEFAULT_EXPLORE_STATE, urgentOnly: 'true' }
+    const counter = makeCounter(EVENTS) // none of the fixtures are isUrgent
+    const currentCount = counter(state)
+    expect(currentCount).toBe(0)
+    const suggestions = getAlternativeFilterSuggestions(state, currentCount, counter)
+    const dropUrgent = suggestions.find((s) => s.id === 'drop-urgentOnly')
+    expect(dropUrgent).toBeTruthy()
+    expect(dropUrgent.patch).toEqual({ urgentOnly: 'all' })
+    expect(dropUrgent.resultCount).toBe(4)
   })
 
   it('returns an empty list when nothing on the whitelist would help (caller falls back to a full reset)', () => {

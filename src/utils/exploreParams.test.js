@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   ADVANCED_FILTER_KEYS, BASIC_FILTER_KEYS, DEFAULT_EXPLORE_STATE, FILTER_KEYS, getPreferencesSyncPatch,
-  parseExploreParams, sanitizeExploreParams,
+  parseExploreParams, QUICK_FILTER_KEYS, sanitizeExploreParams,
 } from './exploreParams'
 import { DEFAULT_FILTERS } from '../constants/taxonomy'
 
@@ -66,6 +66,12 @@ describe('parseExploreParams', () => {
     expect(parseExploreParams(new URLSearchParams('soloJoin=1')).soloJoin).toBe('all')
     expect(parseExploreParams(new URLSearchParams('includeOpenGender=yes')).includeOpenGender).toBe('all')
   })
+
+  it('reads urgentOnly=true, and rejects any other raw value', () => {
+    expect(parseExploreParams(new URLSearchParams('urgentOnly=true')).urgentOnly).toBe('true')
+    expect(parseExploreParams(new URLSearchParams('urgentOnly=false')).urgentOnly).toBe('all')
+    expect(parseExploreParams(new URLSearchParams('urgentOnly=1')).urgentOnly).toBe('all')
+  })
 })
 
 describe('sanitizeExploreParams', () => {
@@ -94,6 +100,11 @@ describe('sanitizeExploreParams', () => {
     expect(params.get('dateRange')).toBe('today')
   })
 
+  it('writes urgentOnly=true only when explicitly set, never as a default-visible key', () => {
+    expect(sanitizeExploreParams({ ...DEFAULT_EXPLORE_STATE, urgentOnly: 'true' }).get('urgentOnly')).toBe('true')
+    expect(sanitizeExploreParams(DEFAULT_EXPLORE_STATE).has('urgentOnly')).toBe(false)
+  })
+
   it('produces a stable, canonical key order regardless of insertion order in the input state', () => {
     const a = sanitizeExploreParams({ ...DEFAULT_EXPLORE_STATE, city: 'taipei', type: 'beach', rotation: 'true' })
     const b = sanitizeExploreParams({ ...DEFAULT_EXPLORE_STATE, rotation: 'true', type: 'beach', city: 'taipei' })
@@ -110,8 +121,12 @@ describe('sanitizeExploreParams', () => {
 })
 
 describe('filter key groupings', () => {
-  it('BASIC_FILTER_KEYS and ADVANCED_FILTER_KEYS together make up FILTER_KEYS minus dateRange', () => {
-    expect(new Set([...BASIC_FILTER_KEYS, 'dateRange', ...ADVANCED_FILTER_KEYS])).toEqual(new Set(FILTER_KEYS))
+  it('BASIC_FILTER_KEYS, dateRange, QUICK_FILTER_KEYS and ADVANCED_FILTER_KEYS together make up FILTER_KEYS', () => {
+    expect(new Set([...BASIC_FILTER_KEYS, 'dateRange', ...QUICK_FILTER_KEYS, ...ADVANCED_FILTER_KEYS])).toEqual(new Set(FILTER_KEYS))
+  })
+
+  it('QUICK_FILTER_KEYS is exactly urgentOnly — a hard flag, not a soft PreferencesContext dimension', () => {
+    expect(QUICK_FILTER_KEYS).toEqual(['urgentOnly'])
   })
 
   it('BASIC_FILTER_KEYS is exactly the 5 dimensions PreferencesContext/matchState compare', () => {

@@ -25,5 +25,6 @@ describe('getLabelForFilter', () => {
     expect(getLabelForFilter('soloJoin', 'true')).toBe('允許單人加入')
     expect(getLabelForFilter('includeOpenLevel', 'true')).toBe('含未限制程度')
     expect(getLabelForFilter('includeOpenGender', 'true')).toBe('含未限制性別')
+    expect(getLabelForFilter('urgentOnly', 'true')).toBe('僅看臨打')
   })
 })

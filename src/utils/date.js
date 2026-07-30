@@ -69,6 +69,20 @@ export function formatEventDateLabel(dateStr, now = new Date()) {
   return dateStr === getTaipeiDateString(now) ? '今天' : dateStr
 }
 
+// Compact { day, weekday } pair for DateBadge — weekday is the same
+// Chinese weekday system used everywhere else in the app (see WEEKDAYS
+// above), just truncated to one character so it fits a small badge; this
+// is deliberately not an English abbreviation, to stay consistent with
+// the full "週五" wording shown elsewhere (e.g. Manage's date picker).
+// Returns null for anything that isn't a real calendar date (e.g. the
+// empty string on a pickup-game listing with no fixed date).
+export function getDateBadgeParts(dateStr) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr || '')) return null
+  const [y, m, d] = dateStr.split('-').map(Number)
+  const utcDate = new Date(Date.UTC(y, m - 1, d))
+  return { day: String(d), weekday: WEEKDAYS[utcDate.getUTCDay()].slice(-1) }
+}
+
 // One event has ended once "now" (Taipei time) reaches or passes its end
 // time (or start time, if no end time is set) on its scheduled date.
 // Plain string comparison works because both sides are zero-padded

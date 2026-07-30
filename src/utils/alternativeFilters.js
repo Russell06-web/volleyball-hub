@@ -20,6 +20,7 @@ const DROP_FILTER_LABELS = {
   equipment: '顯示不限提供設備的活動',
   rotation: '顯示不要求輪轉的活動',
   soloJoin: '顯示不限單人加入規則的活動',
+  urgentOnly: '移除「僅看臨打」，顯示所有活動',
 }
 
 // Turning these ON is a widen, not a "reset" — includeOpenLevel/Gender

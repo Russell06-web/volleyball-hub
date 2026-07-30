@@ -1,4 +1,6 @@
 import { sanitizeExploreParams } from './exploreParams'
+import { SORTS } from '../constants/taxonomy'
+import { getLabelForFilter } from './exploreFilterLabels'
 
 export const MAX_SAVED_SEARCHES = 5
 export const MIN_NAME_LENGTH = 1
@@ -56,4 +58,16 @@ export function savedSearchToQueryString(saved) {
   const params = sanitizeExploreParams({ ...saved.filters, sort: saved.sort, q: '', view: 'all' })
   const query = params.toString()
   return query ? `?${query}` : ''
+}
+
+// Shared by Profile's saved-search list and Explore's "常用的探索條件"
+// strip — one short, readable summary of what a saved search actually
+// applies, so the two places never phrase the same saved entry two
+// different ways.
+export function summarizeSavedSearchFilters(saved) {
+  const parts = Object.entries(saved.filters).map(([key, value]) => getLabelForFilter(key, value))
+  if (saved.sort && saved.sort !== 'default') {
+    parts.push(SORTS.find((s) => s.value === saved.sort)?.label || saved.sort)
+  }
+  return parts.length > 0 ? parts.join('・') : '無篩選條件（僅排序）'
 }

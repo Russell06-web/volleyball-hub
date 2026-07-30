@@ -111,4 +111,22 @@ describe('matchesFilters', () => {
     // "today" used there; here we just confirm the filter wires through.
     expect(matchesFilters(event, { ...ALL_FILTERS, dateRange: 'all' })).toBe(true)
   })
+
+  it('urgentOnly=true only matches events actually flagged isUrgent', () => {
+    expect(matchesFilters({ ...event, isUrgent: true }, { ...ALL_FILTERS, urgentOnly: 'true' })).toBe(true)
+    expect(matchesFilters({ ...event, isUrgent: false }, { ...ALL_FILTERS, urgentOnly: 'true' })).toBe(false)
+    expect(matchesFilters({ ...event, isUrgent: undefined }, { ...ALL_FILTERS, urgentOnly: 'true' })).toBe(false)
+    // off (FILTER_ALL) never excludes, regardless of the event's own flag
+    expect(matchesFilters({ ...event, isUrgent: false }, { ...ALL_FILTERS, urgentOnly: FILTER_ALL })).toBe(true)
+  })
+
+  it('urgentOnly combines with dateRange=today the same way any two active filters combine (AND, not OR)', () => {
+    const todayUrgent = { ...event, date: '2026-03-07', isUrgent: true }
+    const todayCasual = { ...event, date: '2026-03-07', isUrgent: false }
+    const laterUrgent = { ...event, date: '2099-01-01', isUrgent: true }
+    const filters = { ...ALL_FILTERS, urgentOnly: 'true' }
+    expect(matchesFilters(todayUrgent, filters)).toBe(true)
+    expect(matchesFilters(todayCasual, filters)).toBe(false)
+    expect(matchesFilters(laterUrgent, filters)).toBe(true) // dateRange itself is 'all' here, only urgentOnly is active
+  })
 })

@@ -146,3 +146,15 @@
 }
 
 .booking-card .btn-secondary{display:flex; align-items:center; justify-content:center; gap:6px;}
+
+.waitlist-position-note{display:flex; align-items:flex-start; gap:6px; font-size:12px; color:var(--text-secondary); background:var(--surface-subtle); border-radius:var(--r-md); padding:8px 10px; margin:0;}
+.waitlist-position-note svg{flex:none; margin-top:1px; color:var(--warning);}
+
+/* Organiser activity summary — plain counts, never a rating/star/trust
+   badge (see docs/PRODUCT_LIMITATIONS.md and the explicit disclaimer text
+   right below it in EventDetail.jsx). */
+.organizer-summary{margin-top:14px; padding-top:14px; border-top:1px solid var(--border-default);}
+.organizer-summary-stats{display:grid; grid-template-columns:repeat(4,1fr); gap:4px; text-align:center;}
+.organizer-summary-stats b{display:block; font-size:17px; font-weight:800; color:var(--ink-navy); font-variant-numeric:tabular-nums;}
+.organizer-summary-stats span{font-size:10.5px; color:var(--text-secondary);}
+.organizer-summary-note{font-size:11px; color:var(--text-secondary); margin:10px 0 0; line-height:1.5;}

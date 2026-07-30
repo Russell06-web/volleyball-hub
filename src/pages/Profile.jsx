@@ -13,20 +13,11 @@ import { useCompare, MAX_COMPARE } from '../context/CompareContext'
 import { useProfile } from '../context/ProfileContext'
 import { useSavedSearches, MAX_SAVED_SEARCHES } from '../context/SavedSearchesContext'
 import { useEvents } from '../context/EventsContext'
-import { CURRENT_USER_ID, FILTER_ALL, getCityLabel, getLevelLabel, SORTS } from '../constants/taxonomy'
+import { CURRENT_USER_ID, FILTER_ALL, getCityLabel, getLevelLabel } from '../constants/taxonomy'
 import { getPositionLabel } from '../constants/volleyballTaxonomy'
-import { getLabelForFilter } from '../utils/exploreFilterLabels'
-import { savedSearchToQueryString } from '../utils/savedSearches'
+import { savedSearchToQueryString, summarizeSavedSearchFilters } from '../utils/savedSearches'
 import '../styles/profile.css'
 import '../styles/modals.css'
-
-function summarizeSavedSearch(saved) {
-  const parts = Object.entries(saved.filters).map(([key, value]) => getLabelForFilter(key, value))
-  if (saved.sort && saved.sort !== 'default') {
-    parts.push(SORTS.find((s) => s.value === saved.sort)?.label || saved.sort)
-  }
-  return parts.length > 0 ? parts.join('・') : '無篩選條件（僅排序）'
-}
 
 const GITHUB_REPO_URL = 'https://github.com/Russell06-web/volleyball-hub'
 
@@ -182,7 +173,7 @@ export default function Profile() {
                         <>
                           <div className="saved-search-info">
                             <b>{saved.name}</b>
-                            <span>{summarizeSavedSearch(saved)}</span>
+                            <span>{summarizeSavedSearchFilters(saved)}</span>
                           </div>
                           <div className="saved-search-actions">
                             <Link to={`/explore${savedSearchToQueryString(saved)}`} className="link-btn">套用</Link>

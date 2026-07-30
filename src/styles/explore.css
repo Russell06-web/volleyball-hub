@@ -41,23 +41,21 @@
 /* Quick-entry shortcuts — compact action chips, not four big cards, so
    they read as "one tap to a filtered state" rather than another content
    section competing with the activity list below. */
+/* Small icon shortcut buttons — deliberately not full pills, so a
+   one-tap shortcut to a filtered state reads as a distinct control from
+   Chip (a removable filter/selection value). */
 .quick-entry-row{display:flex; gap:8px; flex-wrap:wrap; margin:0 16px 20px;}
-.quick-entry-chip{
+.quick-entry-shortcut{
+  display:inline-flex; align-items:center; gap:7px;
   border:1px solid var(--border-default); background:var(--surface); color:var(--text-primary);
-  padding:9px 16px; border-radius:var(--r-pill); font-size:13px; font-weight:700; white-space:nowrap;
+  padding:9px 16px; border-radius:var(--r-md); font-size:13px; font-weight:700; white-space:nowrap; min-height:40px;
 }
-.quick-entry-chip:hover{border-color:var(--brand-orange); color:var(--brand-orange);}
+.quick-entry-shortcut svg{color:var(--brand-orange);}
+.quick-entry-shortcut:hover{border-color:var(--brand-orange); color:var(--brand-orange);}
 @media (min-width: 640px){ .quick-entry-row{margin:0 24px 22px;} }
 @media (min-width: 1024px){ .quick-entry-row{margin:0 32px 24px;} }
 
 .saved-search-strip .strip-head{margin-bottom:10px;}
-.saved-search-chip-row{display:flex; gap:8px; flex-wrap:wrap;}
-.saved-search-entry-chip{
-  display:inline-flex; align-items:center; gap:6px; border:1px solid var(--border-default); background:var(--surface-subtle);
-  color:var(--text-primary); padding:8px 14px; border-radius:var(--r-pill); font-size:12.5px; font-weight:700;
-}
-.saved-search-entry-chip svg{color:var(--court-teal);}
-.saved-search-entry-chip:hover{border-color:var(--court-teal);}
 
 .layout{display:flex; flex:1; align-items:flex-start;}
 
@@ -133,18 +131,94 @@
   .filter-modal-head{padding-top:0;}
 }
 
-/* urgent (live pickup game) cards — EventCard variant="urgent" rendered
-   in a grid, not the horizontal card-scroll strip, so its fixed
-   scroll-strip width/flex needs resetting back to fill the grid cell. */
-.urgent-grid{display:grid; grid-template-columns:1fr; gap:12px;}
-.urgent-grid .event-card{width:auto; flex:auto;}
 .urgent-card{border-left:3px solid var(--danger);}
-@media (min-width: 640px){ .urgent-grid{grid-template-columns:repeat(2,1fr);} }
+.urgent-timeline .date-group:last-child{margin-bottom:0;}
+
+/* Asymmetric Featured layout — a single lead card plus up to 2 compact
+   secondary cards, only at desktop; mobile keeps the same cards in a
+   horizontal scroll instead of squeezing a 2-column layout into a narrow
+   viewport. */
+/* Deliberately not reusing .card-scroll here — that class's own base rule
+   (style.css) and this element's "hidden at desktop" rule would otherwise
+   compete at equal specificity, with the winner depending on CSS load
+   order rather than intent. Same visual result, but self-contained. */
+.featured-mobile-scroll{display:flex; gap:12px; overflow-x:auto; padding-bottom:6px; margin:0 -16px; padding-left:16px; padding-right:16px; scrollbar-width:thin;}
+.featured-layout{display:none;}
+.featured-secondary{display:flex; flex-direction:column; gap:12px;}
+@media (min-width: 1024px){
+  .featured-mobile-scroll{display:none;}
+  .featured-layout{display:grid; grid-template-columns:2fr 1fr; gap:16px; align-items:stretch;}
+  .featured-lead, .featured-lead .card{height:100%;}
+}
+
+/* Saved-search entries as compact cards/list-items, not another row of
+   identical pills — distinct from Chip (filter/selection) and Badge
+   (status), this is a small navigable summary card. */
+.saved-search-card-list{display:flex; flex-direction:column; gap:8px;}
+.saved-search-card{
+  display:flex; align-items:center; gap:10px; background:var(--surface); border:1px solid var(--border-default);
+  border-radius:var(--r-md); padding:10px 14px;
+}
+.saved-search-card:hover{border-color:var(--court-teal);}
+.saved-search-card svg{flex:none; color:var(--court-teal);}
+.saved-search-card-text{display:flex; flex-direction:column; gap:1px; min-width:0;}
+.saved-search-card-text b{font-size:13px;}
+.saved-search-card-text span{font-size:11.5px; color:var(--text-secondary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+
+/* Section background rhythm — Surface/padding bands instead of borders or
+   card containers around every section, so consecutive strips read as
+   distinct zones without adding more brand colour. */
+.surface-band{background:var(--surface-subtle); margin:0 -16px; padding:20px 16px; border-radius:0;}
+.surface-band-alt{background:var(--surface-subtle); margin:0 -16px; padding:20px 16px;}
+@media (min-width: 640px){ .surface-band, .surface-band-alt{margin:0 -24px; padding:24px;} }
+@media (min-width: 1024px){ .surface-band, .surface-band-alt{margin:0 -32px; padding:28px 32px; border-radius:var(--r-lg);} }
 
 /* main event grid */
 .event-grid{display:grid; grid-template-columns:1fr; gap:12px;}
 @media (min-width: 640px){ .event-grid{grid-template-columns:repeat(2,1fr);} }
 @media (min-width: 1024px){ .event-grid{grid-template-columns:repeat(3,1fr);} }
+
+/* Grid/List display-mode toggle — a compact icon+label pair, not a full
+   settings panel. aria-pressed marks the active mode; both buttons stay
+   in the DOM (never a single toggle switch) so each mode has its own
+   clear label for screen readers. */
+.layout-toggle{display:flex; gap:6px; margin-bottom:14px;}
+.layout-toggle button{
+  display:flex; align-items:center; gap:6px; padding:8px 14px; min-height:40px;
+  border:1px solid var(--border-default); border-radius:var(--r-sm); background:var(--surface);
+  color:var(--text-secondary); font-size:12.5px; font-weight:700;
+}
+.layout-toggle button.active{border-color:var(--brand-orange); color:var(--brand-orange-hover); background:var(--brand-orange-soft);}
+
+/* Date-grouped sections inside 更多活動 — a plain heading + spacing, not
+   another heavy card wrapper around every single day. */
+.date-group{margin-bottom:22px;}
+.date-group-heading{font-size:14px; font-weight:800; color:var(--text-secondary); margin:0 0 10px;}
+
+/* List-mode rows — compact, single line of primary info, never a second
+   full card. Mobile stacks the pieces but stays a row, not a card. */
+.event-list{display:flex; flex-direction:column; gap:10px;}
+.event-list-row{
+  display:flex; align-items:center; gap:14px; background:var(--surface); border:1px solid var(--border-default);
+  border-radius:var(--r-md); padding:12px 14px; box-shadow:var(--shadow-card);
+}
+.event-list-when{flex:none; width:56px; text-align:center; font-variant-numeric:tabular-nums;}
+.event-list-date{display:block; font-size:12px; font-weight:800; color:var(--text-primary);}
+.event-list-time{display:block; font-size:11px; color:var(--text-secondary);}
+.event-list-main{flex:1; min-width:0; display:flex; flex-direction:column; gap:4px;}
+.event-list-badge{margin-bottom:2px;}
+.event-list-title{font-size:14px; font-weight:800; color:var(--text-primary); display:block;}
+.event-list-venue{display:flex; align-items:center; gap:5px; font-size:12px; color:var(--text-secondary); margin:0;}
+.event-list-capacity{flex:none; width:120px;}
+.event-list-actions{flex:none; display:flex; align-items:center; gap:8px;}
+@media (max-width: 767.98px){
+  .event-list-row{flex-wrap:wrap;}
+  .event-list-capacity{display:none;}
+  /* width:100% with an added margin-left would overflow the row by that
+     margin — this stays flush with the date column on the left instead,
+     rather than trying to indent it under the title text. */
+  .event-list-actions{width:100%; justify-content:space-between;}
+}
 
 /* full events: waitlist affordance instead of the primary "報名" CTA */
 .tag.wait{background:var(--warning-soft); color:var(--warning);}
@@ -153,25 +227,41 @@
 
 /* live filter result count */
 .filter-result-count{font-size:12px; color:var(--text-secondary); text-align:center; margin:4px 0 16px;}
-.filter-result-count.top{display:flex; align-items:center; justify-content:space-between; text-align:left; background:var(--surface-subtle); border-radius:var(--r-md); padding:10px 14px; margin:0;}
-.filter-result-count.top .link-btn{flex:none;}
 
-/* search + sort toolbar */
-.explore-toolbar{display:flex; flex-direction:column; gap:10px; margin-bottom:18px;}
-.explore-toolbar .filter-result-count.top{flex:1;}
+/* Mobile/tablet-only search bar shown once Hero is gone (searching or
+   filtering) — Header's own search only appears at >=640px, so below
+   that this is the only way to edit the query. Hidden again once
+   Header's search takes over, so the two are never both on screen. */
+.compact-search-bar{
+  display:flex; align-items:center; gap:8px; background:var(--surface-subtle); border:1px solid var(--border-default);
+  border-radius:var(--r-md); padding:11px 14px; min-height:44px; margin-bottom:14px; color:var(--text-secondary);
+}
+.compact-search-bar:focus-within{border-color:var(--brand-orange);}
+.compact-search-bar svg{flex:none;}
+.compact-search-bar input{border:none; background:none; outline:none; font-size:13.5px; color:var(--text-primary); width:100%; font-family:inherit;}
+.compact-search-bar input::-webkit-search-cancel-button{display:none;}
+.compact-search-bar button{flex:none; width:26px; height:26px; border-radius:50%; border:none; background:var(--border-default); color:var(--text-secondary); display:flex; align-items:center; justify-content:center;}
+.compact-search-bar button:hover{background:var(--text-secondary); color:#fff;}
+@media (min-width: 640px){ .compact-search-bar{display:none;} }
+
+/* unified Results Header — one heading, one meta line, one sort control;
+   replaces what used to be three separate places (Header subtitle,
+   filter-result-count toolbar, results-heading-row) all saying some
+   version of the same thing. */
+.results-header{display:flex; flex-direction:column; gap:12px; margin-bottom:16px;}
+.results-header h1{font-size:20px; margin:0 0 4px;}
+.results-header-meta{display:flex; align-items:center; flex-wrap:wrap; gap:10px; font-size:12.5px; color:var(--text-secondary); margin:0;}
+.results-header-meta .link-btn{flex:none;}
 .sort-select select{
   width:100%; font-family:inherit; font-size:12.5px; font-weight:700; color:var(--text-primary);
   background:var(--surface); border:1px solid var(--border-default); border-radius:var(--r-md); padding:10px 12px;
 }
 .sort-select select:focus-visible{outline:2px solid var(--focus-ring); outline-offset:1px;}
 @media (min-width: 640px){
-  .explore-toolbar{flex-direction:row; align-items:center;}
+  .results-header{flex-direction:row; align-items:flex-start; justify-content:space-between;}
+  .results-header h1{font-size:22px;}
   .sort-select{flex:none; width:170px;}
 }
-
-/* visible heading above the unified search/filter results list */
-.results-heading-row{margin-bottom:12px;}
-.results-heading-row h2{font-size:16px;}
 
 /* single-section focus view ("查看全部") */
 .back-to-all{display:inline-flex; align-items:center; gap:4px;}
@@ -181,8 +271,12 @@
 
 /* active filter chips — mobile-visible summary of what's currently
    applied, since city/level/gender/price all live inside a modal once
-   closed and would otherwise be invisible. */
-.active-filters{display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-bottom:16px;}
+   closed and would otherwise be invisible. Collapsed beyond a per-
+   breakpoint cap (see ActiveFiltersSummary.jsx) into a "+N" toggle, and
+   the page-level actions (清除全部/儲存這組條件) sit in their own row
+   below rather than mixed into the chip list. */
+.active-filters-block{margin-bottom:16px;}
+.active-filters{display:flex; flex-wrap:wrap; align-items:center; gap:8px;}
 .active-filter-chip{
   display:inline-flex; align-items:center; gap:6px; padding:6px 8px 6px 14px;
   border-radius:var(--r-pill); background:var(--brand-orange-soft); color:var(--brand-orange-hover);
@@ -193,6 +287,12 @@
   background:rgba(255,255,255,.55); color:inherit; display:flex; align-items:center; justify-content:center;
 }
 .active-filter-chip .chip-remove:hover{background:#fff;}
+.active-filter-more{
+  border-radius:var(--r-pill); border:1px solid var(--border-default); background:var(--surface);
+  color:var(--text-secondary); font-size:12.5px; font-weight:700; padding:7px 14px; min-height:36px;
+}
+.active-filter-more:hover{border-color:var(--brand-orange); color:var(--brand-orange);}
+.active-filters-actions{display:flex; align-items:center; gap:16px; margin-top:10px;}
 
 /* Empty-result alternative suggestions — each one is a verified "click
    this and you'll see N results", never a vague nudge. */

@@ -1,5 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
 import { Icon } from './Icons'
+import DateBadge from './DateBadge'
+import CapacityBar from './CapacityBar'
 import { useFavorites } from '../context/FavoritesContext'
 import { useCompare } from '../context/CompareContext'
 import { formatPrice } from '../utils/format'
@@ -29,7 +31,12 @@ import { getEventInformationQuality } from '../utils/informationQuality'
 // at all, so repeating that judgement per-card would just be restating
 // the filter result. The full comparison against the user's filters
 // lives on EventDetail, where it's actually new information.
-export default function EventCard({ ev, variant = 'default' }) {
+// `compact` only ever applies alongside variant="featured" — the two
+// secondary slots in the asymmetric Featured layout (see Explore.jsx),
+// where the same card just carries less visual weight than the lead. It
+// changes CSS only (see .featured-card.compact), never which data or
+// business logic runs.
+export default function EventCard({ ev, variant = 'default', compact = false }) {
   const status = getEventStatus(ev)
   const full = status === EVENT_STATUS.FULL
   const inactive = status === EVENT_STATUS.CANCELLED || status === EVENT_STATUS.COMPLETED
@@ -57,12 +64,10 @@ export default function EventCard({ ev, variant = 'default' }) {
   const netHeightKnown = ev.netHeight && ev.netHeight !== NET_HEIGHT_UNSPECIFIED
 
   return (
-    <article className={`card event-card${isUrgent ? ' urgent-card' : ''}${isFeatured ? ' featured-card' : ''}`}>
+    <article className={`card event-card${isUrgent ? ' urgent-card' : ''}${isFeatured ? ' featured-card' : ''}${isFeatured && compact ? ' compact' : ''}`}>
       <div className="card-top">
         {isUrgent ? (
-          <span className="badge live">
-            <i />急徵隊友{shortage ? `・${shortage.text}` : ''}
-          </span>
+          <span className="badge live"><i />急徵隊友</span>
         ) : isFeatured ? (
           <span className="badge featured">精選</span>
         ) : <span aria-hidden="true" />}
@@ -85,7 +90,17 @@ export default function EventCard({ ev, variant = 'default' }) {
           </button>
         </div>
       </div>
-      <Link to={`/event/${ev.id}`} state={linkState}><h3>{ev.title}</h3></Link>
+      {isFeatured ? (
+        <div className="card-title-row">
+          <DateBadge date={ev.date} />
+          <Link to={`/event/${ev.id}`} state={linkState} className="card-title-row-text"><h3>{ev.title}</h3></Link>
+        </div>
+      ) : (
+        <>
+          <Link to={`/event/${ev.id}`} state={linkState}><h3>{ev.title}</h3></Link>
+          {shortage && <p className="shortage-row"><Icon id="i-info" size={12} />{shortage.text}</p>}
+        </>
+      )}
       <div className="tag-row">
         {ev.level !== 'open' && <span className="tag level">{getLevelLabel(ev.level)}</span>}
         <span className="tag type">{getCityLabel(ev.city)}</span>
@@ -100,7 +115,14 @@ export default function EventCard({ ev, variant = 'default' }) {
       <ul className="meta">
         <li><Icon id="i-pin" size={14} /><span>{ev.venueName}</span></li>
         <li className="meta-date"><Icon id="i-calendar" size={14} />{formatEventDateLabel(ev.date)}・{ev.startTime}</li>
-        <li><Icon id="i-users" size={14} />{ev.registeredCount} / {ev.capacity} 人</li>
+        {/* Featured/Urgent get the full capacity bar (see CapacityBar.jsx);
+            Standard keeps the plain count — a deliberately simplified
+            version, not every card needs the same visual weight here. */}
+        {isFeatured || isUrgent ? (
+          <li className="meta-capacity"><CapacityBar event={ev} /></li>
+        ) : (
+          <li><Icon id="i-users" size={14} />{ev.registeredCount} / {ev.capacity} 人</li>
+        )}
       </ul>
       {!inactive && infoQuality.state !== 'complete' && (
         <p className={`info-quality-hint${infoQuality.state === 'needsInfo' ? ' needs-info' : ''}`}>

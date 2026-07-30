@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  addDaysInTaipei, formatEventDateLabel, futureDate, futureDateWithLabel, getEventEndDateTime,
+  addDaysInTaipei, formatEventDateLabel, futureDate, futureDateWithLabel, getDateBadgeParts, getEventEndDateTime,
   getTaipeiDateString, getTaipeiNowParts, isPastEvent,
 } from './date'
 
@@ -95,6 +95,22 @@ describe('formatEventDateLabel', () => {
     const now = new Date('2026-03-01T16:05:00Z') // 2026-03-02 in Taipei
     expect(formatEventDateLabel('2026-03-02', now)).toBe('今天')
     expect(formatEventDateLabel('2026-03-01', now)).toBe('2026-03-01')
+  })
+})
+
+describe('getDateBadgeParts', () => {
+  it('returns the day number and a single-character Chinese weekday', () => {
+    expect(getDateBadgeParts('2026-03-07')).toEqual({ day: '7', weekday: '六' }) // 2026-03-07 is a Saturday
+  })
+
+  it('returns null for anything that is not a real YYYY-MM-DD date (e.g. an unscheduled pickup listing)', () => {
+    expect(getDateBadgeParts('')).toBeNull()
+    expect(getDateBadgeParts(undefined)).toBeNull()
+    expect(getDateBadgeParts('not-a-date')).toBeNull()
+  })
+
+  it('parses the date string as a plain calendar date, never shifted by local timezone', () => {
+    expect(getDateBadgeParts('2026-01-01').day).toBe('1')
   })
 })
 

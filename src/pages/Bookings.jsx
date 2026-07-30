@@ -15,6 +15,9 @@ import { getLevelLabel } from '../constants/taxonomy'
 import { getNetHeightLabel, getPositionLabel, getVolleyballFormatLabel } from '../constants/volleyballTaxonomy'
 import { getPositionShortageSummary } from '../utils/positionShortage'
 import { buildFromState } from '../utils/navigation'
+import { getWeeklyScheduleGroups } from '../utils/weeklySchedule'
+import { getWaitlistPosition } from '../utils/waitlistPosition'
+import { downloadEventIcs, hasCalendarDate } from '../utils/ics'
 import '../styles/bookings.css'
 import '../styles/modals.css'
 
@@ -36,10 +39,12 @@ const TABS = [
 
 export default function Bookings() {
   const { bookings, cancelBooking, markReviewed } = useBookings()
-  const { getEventById, updateEvent } = useEvents()
+  const { events, getEventById, updateEvent } = useEvents()
   const { showToast } = useToast()
   const [tab, setTab] = useState('all')
   const [cancelTarget, setCancelTarget] = useState(null)
+  const location = useLocation()
+  const linkState = buildFromState(location)
 
   useEffect(() => {
     document.title = '我的報名｜Volleyball Hub'
@@ -49,6 +54,15 @@ export default function Bookings() {
     const c = { all: bookings.length, pending: 0, confirmed: 0, waitlist: 0, completed: 0 }
     bookings.forEach((b) => { if (c[b.status] !== undefined) c[b.status] += 1 })
     return c
+  }, [bookings])
+
+  const weeklyGroups = useMemo(() => getWeeklyScheduleGroups(bookings, events), [bookings, events])
+  const waitlistPositionById = useMemo(() => {
+    const map = new Map()
+    bookings.forEach((b) => {
+      if (b.status === 'waitlist') map.set(b.id, getWaitlistPosition(bookings, b.eventId, b.id))
+    })
+    return map
   }, [bookings])
 
   const visible = tab === 'all' ? bookings : bookings.filter((b) => b.status === tab)
@@ -73,6 +87,36 @@ export default function Bookings() {
       <Header title="我的報名" subtitle="管理你的活動" active="bookings" />
 
       <main className="content">
+        <section className="weekly-schedule">
+          <h2>我的本週球局</h2>
+          {weeklyGroups.length === 0 ? (
+            <p className="empty-state">這週沒有已報名或候補的活動。</p>
+          ) : (
+            weeklyGroups.map((group) => (
+              <div key={group.date} className="date-group">
+                <h3 className="date-group-heading">{group.label}</h3>
+                <ul className="weekly-schedule-list">
+                  {group.entries.map(({ booking: b, event }) => (
+                    <li key={b.id} className="weekly-schedule-item">
+                      <span className="weekly-schedule-time">{event.startTime}</span>
+                      <div className="weekly-schedule-main">
+                        <Link to={`/event/${event.id}`} state={linkState}>{event.title}</Link>
+                        <span className="weekly-schedule-venue"><Icon id="i-pin" size={12} />{event.venueName}</span>
+                      </div>
+                      <span className={`badge ${STATUS_META[b.status]?.tone || ''}`}>{STATUS_META[b.status]?.label}</span>
+                      {hasCalendarDate(event) && b.status !== 'cancelled' && (
+                        <button type="button" className="icon-btn sm ghost" aria-label={`將${event.title}加入行事曆`} onClick={() => downloadEventIcs(event)}>
+                          <Icon id="i-calendar" size={14} />
+                        </button>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))
+          )}
+        </section>
+
         <div className="stats-strip">
           <div className="stat-tile"><b>{counts.all}</b><span>全部</span></div>
           <div className="stat-tile warn"><b>{counts.pending}</b><span>待確認</span></div>
@@ -104,6 +148,7 @@ export default function Bookings() {
                 key={b.id}
                 booking={b}
                 event={getEventById(b.eventId)}
+                waitlistPosition={waitlistPositionById.get(b.id)}
                 onCancel={() => setCancelTarget(b)}
                 onReview={() => markReviewed(b.id)}
               />
@@ -119,7 +164,7 @@ export default function Bookings() {
   )
 }
 
-function BookingCard({ booking: b, event, onCancel, onReview }) {
+function BookingCard({ booking: b, event, waitlistPosition, onCancel, onReview }) {
   const meta = STATUS_META[b.status] || STATUS_META.pending
   const upcoming = b.status === 'pending' || b.status === 'confirmed' || b.status === 'waitlist'
   const eventCancelled = event && getEventStatus(event) === EVENT_STATUS.CANCELLED
@@ -147,6 +192,15 @@ function BookingCard({ booking: b, event, onCancel, onReview }) {
         <div className="warn-banner inline-warn">
           <Icon id="i-info" size={16} />
           <span>主辦方已取消這場活動</span>
+        </div>
+      )}
+      {b.status === 'waitlist' && !eventCancelled && waitlistPosition && (
+        <div className="warn-banner info">
+          <Icon id="i-info" size={15} />
+          <div>
+            <b>目前候補第 {waitlistPosition} 位</b>
+            <span>此原型不會發送名額通知或自動遞補，請自行留意活動狀態。</span>
+          </div>
         </div>
       )}
       <div className="tag-row">{event.level !== 'open' && <span className="tag level">{getLevelLabel(event.level)}</span>}</div>

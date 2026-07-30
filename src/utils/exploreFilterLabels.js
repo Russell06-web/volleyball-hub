@@ -9,6 +9,7 @@ const BOOLEAN_FLAG_LABELS = {
   soloJoin: '允許單人加入',
   includeOpenLevel: '含未限制程度',
   includeOpenGender: '含未限制性別',
+  urgentOnly: '僅看臨打',
 }
 
 function getDateRangeLabel(value) {

@@ -46,6 +46,13 @@ describe('buildSavedSearchFilters', () => {
     const { sort } = buildSavedSearchFilters(state)
     expect(sort).toBe('priceAsc')
   })
+
+  it('saves urgentOnly like any other filter — "今天臨打" stays applyable once saved', () => {
+    const state = { ...DEFAULT_EXPLORE_STATE, dateRange: 'today', urgentOnly: 'true' }
+    const { filters } = buildSavedSearchFilters(state)
+    expect(filters.dateRange).toBe('today')
+    expect(filters.urgentOnly).toBe('true')
+  })
 })
 
 describe('sanitizeSavedSearches', () => {

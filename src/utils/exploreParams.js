@@ -21,11 +21,19 @@ export const ADVANCED_FILTER_KEYS = [
   'rotation', 'soloJoin', 'equipment', 'includeOpenLevel', 'includeOpenGender',
 ]
 
+// "僅看臨打" (urgentOnly) is a hard boolean flag like rotation/soloJoin —
+// not a soft preference PreferencesContext/matchState.js explains — but it
+// lives in the always-visible basic section next to 活動類型, not the
+// collapsed advanced accordion (see FilterPanel.jsx), so it gets its own
+// small group rather than folding into BASIC_FILTER_KEYS or
+// ADVANCED_FILTER_KEYS.
+export const QUICK_FILTER_KEYS = ['urgentOnly']
+
 // Every filter key Explore's URL/hard-filter/active-chips care about.
 // `dateRange` sits with the "quick" filters (not the advanced/collapsed
 // group) per the IA brief — date is a everyday decision, not a
 // volleyball-specific nuance.
-export const FILTER_KEYS = [...BASIC_FILTER_KEYS, 'dateRange', ...ADVANCED_FILTER_KEYS]
+export const FILTER_KEYS = [...BASIC_FILTER_KEYS, 'dateRange', ...QUICK_FILTER_KEYS, ...ADVANCED_FILTER_KEYS]
 
 const VALID_VALUES = {
   type: new Set([FILTER_ALL, ...EVENT_TYPES.map((t) => t.value)]),
@@ -47,6 +55,7 @@ const VALID_VALUES = {
   soloJoin: new Set([FILTER_ALL, 'true']),
   includeOpenLevel: new Set([FILTER_ALL, 'true']),
   includeOpenGender: new Set([FILTER_ALL, 'true']),
+  urgentOnly: new Set([FILTER_ALL, 'true']),
   sort: new Set(SORTS.map((s) => s.value)),
   view: new Set(Object.values(SECTION_VIEW)),
 }

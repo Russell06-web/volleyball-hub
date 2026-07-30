@@ -26,6 +26,8 @@ import { planRegistration } from '../services/registrationService'
 import { resolveBackTo } from '../utils/navigation'
 import { getEventInformationQuality, INFO_FIELD_LABELS } from '../utils/informationQuality'
 import { getPositionShortageSummary } from '../utils/positionShortage'
+import { getWaitlistPosition } from '../utils/waitlistPosition'
+import { getOrganizerActivitySummary } from '../utils/organizerActivitySummary'
 import '../styles/detail.css'
 import '../styles/modals.css'
 import '../styles/notfound.css'
@@ -88,12 +90,12 @@ export default function EventDetail() {
   const navigate = useNavigate()
   const location = useLocation()
   const backTo = resolveBackTo(location.state?.from)
-  const { addBooking, hasActiveBooking, hasWaitlistBooking, bookings } = useBookings()
+  const { addBooking, hasActiveBooking, hasWaitlistBooking, bookings, getBookingByEventId } = useBookings()
   const { filters } = usePreferences()
   const { isFavorite, toggleFavorite } = useFavorites()
   const { isCompared, toggleCompare } = useCompare()
   const { recordView } = useHistory()
-  const { getEventById, updateEvent } = useEvents()
+  const { events, getEventById, updateEvent } = useEvents()
   const { profile } = useProfile()
   const { showToast } = useToast()
   const [modalOpen, setModalOpen] = useState(false)
@@ -124,6 +126,9 @@ export default function EventDetail() {
   const compared = isCompared(event.id)
   const alreadyActive = hasActiveBooking(event.id)
   const alreadyWaitlist = hasWaitlistBooking(event.id)
+  const myBooking = getBookingByEventId(event.id)
+  const myWaitlistPosition = alreadyWaitlist && myBooking ? getWaitlistPosition(bookings, event.id, myBooking.id) : null
+  const organizerSummary = event.ownerId ? getOrganizerActivitySummary(events, event.ownerId) : null
   const hasHighlights = event.hasInsurance || event.hasCoach || event.playStyle || (event.features && event.features.length > 0)
   const showPositionBoard = !cancelled && !completed && !full
   const infoQuality = getEventInformationQuality(event)
@@ -369,6 +374,19 @@ export default function EventDetail() {
                 {event.organizerName && <li><Icon id="i-user" size={18} /><div><b>主辦方</b><span>{event.organizerName}</span></div></li>}
                 {event.organizerContact && <li><Icon id="i-info" size={18} /><div><b>聯絡方式</b><span>{event.organizerContact}</span></div></li>}
               </ul>
+              {organizerSummary && organizerSummary.total > 0 && (
+                <div className="organizer-summary">
+                  <div className="organizer-summary-stats">
+                    <div><b>{organizerSummary.total}</b><span>已建立活動</span></div>
+                    <div><b>{organizerSummary.completed}</b><span>已完成</span></div>
+                    <div><b>{organizerSummary.upcoming}</b><span>即將舉行</span></div>
+                    <div><b>{organizerSummary.cancelled}</b><span>已取消</span></div>
+                  </div>
+                  <p className="organizer-summary-note">
+                    以上為主辦方在此原型中建立的活動紀錄，僅供參考，不是評分、推薦或平台認證。
+                  </p>
+                </div>
+              )}
             </section>
           )}
         </main>
@@ -401,6 +419,12 @@ export default function EventDetail() {
             {shortage && <li className="shortage-line"><Icon id="i-info" size={15} />{shortage.text}</li>}
             <li><Icon id="i-shield" size={15} />{paymentLabel}</li>
           </ul>
+          {alreadyWaitlist && myWaitlistPosition && (
+            <p className="waitlist-position-note">
+              <Icon id="i-info" size={14} />
+              目前候補第 {myWaitlistPosition} 位・此原型不會發送名額通知或自動遞補
+            </p>
+          )}
           {cancelled || completed ? (
             <button className="btn-secondary full" disabled>{EVENT_STATUS_META[status].label}，無法報名</button>
           ) : (

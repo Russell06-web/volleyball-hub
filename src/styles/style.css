@@ -224,7 +224,39 @@ img{max-width:100%; display:block;}
 /* Two lines max, then ellipsis — a long activity title never pushes the
    rest of the card's facts down or breaks the grid's row height. */
 .card h3{font-size:15.5px; font-weight:800; line-height:1.3; letter-spacing:-.01em; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;}
+/* Position shortage lives in its own row under the title, never folded
+   into the urgent status badge — the badge says "there's a status",
+   this row says "here's specifically what's needed". */
+.shortage-row{display:flex; align-items:center; gap:5px; margin:-2px 0 0; font-size:12px; font-weight:700; color:var(--danger);}
 .card-foot{display:flex; align-items:center; justify-content:space-between; margin-top:auto; padding-top:6px;}
+
+/* Featured lead card: date badge sits beside the title instead of buried
+   in the meta list, so the date is the first thing a glance lands on. */
+.card-title-row{display:flex; align-items:flex-start; gap:10px;}
+.card-title-row-text{flex:1; min-width:0;}
+.date-badge{
+  flex:none; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  width:40px; height:40px; border-radius:var(--r-sm); background:var(--brand-orange-soft); color:var(--brand-orange-hover);
+}
+.date-badge-day{font-size:15px; font-weight:800; line-height:1.1; font-variant-numeric:tabular-nums;}
+.date-badge-weekday{font-size:9.5px; font-weight:700; letter-spacing:.02em;}
+
+/* Compact secondary Featured cards — same card, less visual weight. */
+.featured-card.compact{padding:11px;}
+.featured-card.compact .date-badge{width:32px; height:32px;}
+.featured-card.compact .date-badge-day{font-size:13px;}
+.featured-card.compact h3{font-size:13.5px;}
+.featured-card.compact .info-quality-hint{display:none;}
+
+/* Capacity indicator — thin line, never a circular gauge, never animated. */
+.capacity-indicator{display:flex; align-items:center; gap:8px; flex:1; min-width:0;}
+.capacity-bar-track{flex:1; height:5px; border-radius:var(--r-pill); background:var(--surface-subtle); overflow:hidden;}
+.capacity-bar-fill{height:100%; border-radius:var(--r-pill); background:var(--court-teal); transition:width .2s ease;}
+.capacity-bar-track.warning .capacity-bar-fill{background:var(--warning);}
+.capacity-bar-track.full .capacity-bar-fill{background:var(--ink-navy);}
+.capacity-label{flex:none; font-size:11.5px; font-weight:700; color:var(--text-secondary); font-variant-numeric:tabular-nums;}
+.meta-capacity{flex:1;}
+@media (prefers-reduced-motion: reduce){ .capacity-bar-fill{transition:none;} }
 
 .price{font-size:17px; font-weight:800; color:var(--ink-navy); font-variant-numeric:tabular-nums; letter-spacing:-.01em;}
 .price.free{color:var(--success);}
@@ -241,6 +273,7 @@ img{max-width:100%; display:block;}
 .featured-card .meta-date{font-weight:700; color:var(--text-primary);}
 .featured-card .meta-date svg{color:var(--brand-orange);}
 .btn-cta.featured{padding:10px 20px; font-size:13px; box-shadow:0 6px 14px -6px color-mix(in srgb, var(--brand-orange) 60%, transparent);}
+.btn-cta.sm{padding:7px 14px; font-size:12px;}
 
 .meta{display:flex; flex-direction:column; gap:5px; margin:2px 0;}
 .meta li{display:flex; align-items:flex-start; gap:6px; font-size:12.5px; color:var(--text-secondary);}
@@ -352,16 +385,32 @@ img{max-width:100%; display:block;}
   background:var(--ink-navy); color:#fff; border-radius:var(--r-lg); padding:12px 14px calc(12px + env(safe-area-inset-bottom));
   box-shadow:var(--shadow-pop); display:flex; flex-direction:column; gap:8px;
 }
-.compare-tray-head{display:flex; align-items:center; justify-content:space-between; font-size:12.5px; font-weight:700;}
-.compare-tray-head .link-btn{color:#fff; text-decoration:underline; opacity:.85;}
+.compare-tray-head{display:flex; align-items:center; justify-content:space-between; gap:10px; font-size:12.5px; font-weight:700;}
+.compare-tray-head .link-btn{color:#fff; text-decoration:underline; opacity:.85; flex:none; min-height:44px; display:flex; align-items:center;}
+.compare-tray-toggle{
+  display:flex; align-items:center; gap:6px; background:none; border:none; color:#fff;
+  font-size:12.5px; font-weight:700; padding:0; min-height:44px;
+}
+.compare-tray-chevron{transform:rotate(90deg); transition:transform .15s ease;}
+.compare-tray-chevron.open{transform:rotate(-90deg);}
 .compare-tray-chips{display:flex; flex-wrap:wrap; gap:6px;}
 .compare-tray-chip{
   display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,.14);
   border-radius:var(--r-pill); padding:5px 6px 5px 12px; font-size:12px; font-weight:600; max-width:170px;
 }
-.compare-tray-chip button{flex:none; width:20px; height:20px; border-radius:50%; border:none; background:rgba(255,255,255,.2); color:#fff; display:flex; align-items:center; justify-content:center;}
+.compare-tray-chip button{flex:none; width:20px; height:20px; min-width:20px; border-radius:50%; border:none; background:rgba(255,255,255,.2); color:#fff; display:flex; align-items:center; justify-content:center; position:relative;}
+/* Visible circle stays small (20px) so it doesn't dominate the chip, but
+   the real hit area is padded out to the ~44px minimum via a transparent
+   ::before, same trick used by .icon-btn elsewhere. */
+.compare-tray-chip button::before{content:""; position:absolute; inset:-12px;}
 .compare-tray-cta{width:100%;}
-@media (prefers-reduced-motion: reduce){ .compare-tray{transition:none;} }
+.compare-tray-hint{font-size:11.5px; color:rgba(255,255,255,.75); text-align:center; margin:0;}
+@media (max-width: 639.98px){
+  .compare-tray-chips{display:none;}
+  .compare-tray-chips.expanded{display:flex; margin-bottom:2px;}
+}
+@media (min-width: 640px){ .compare-tray-toggle{cursor:default;} }
+@media (prefers-reduced-motion: reduce){ .compare-tray{transition:none;} .compare-tray-chevron{transition:none;} }
 
 /* Minimum comfortable touch target for icon-only controls, without
    changing their visible size. */

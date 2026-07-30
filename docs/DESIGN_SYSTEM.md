@@ -114,16 +114,46 @@
 - **Chip**（`.chip`）：可點擊的篩選／選擇，全膠囊，有 `active`／`hover`／`focus-visible` 狀態，active 狀態的 ToggleChip 額外顯示打勾圖示，不是只變色。
 - **Badge**（`.badge`）：不可互動的狀態標記（精選、額滿、取消、完成、草稿、急徵），全膠囊，字級 11–12.5px。
 - **Tag**（`.tag`）：活動屬性（程度、城市、網高、球制），外觀是小圓角矩形（`--r-xs`），不是膠囊，避免被誤認成可點擊的按鈕。同一張卡片最多 3–4 個 Tag。
+- **Quick-entry shortcut**（`.quick-entry-shortcut`）：Explore 首頁的快速入口（今天臨打／週末球局／中階活動／我需要的位置），刻意用小圓角矩形＋icon，不是膠囊——它是「一鍵跳到一個篩選狀態」的捷徑按鈕，不是可移除的篩選值，長得像 Chip 反而會讓人誤以為點了之後會多一個可移除的條件。
+- **Saved-search card**（`.saved-search-card`）：已儲存的探索條件用小卡片／清單項目呈現（icon＋名稱＋條件摘要），不是一整排看起來一樣的膠囊——每一個都是可以個別點開套用的獨立項目，需要一點空間放下條件摘要文字，膠囊裝不下也不適合。
 
 ## Event Cards
 
 三個共用同一個 `EventCard` 元件與同一套資料/商業邏輯（`src/components/EventCard.jsx`），只有 `variant` 不同：
 
-- **Standard**（`variant="default"`）：白底、輕邊框、標準資訊層級。
-- **Featured**（`variant="featured"`）：淡橘到白的漸層背景疊加極淡球場紋理，日期時間加粗加色，CTA 稍微加大（`.btn-cta.featured`）。從不是整張純橘色。
-- **Urgent**（`variant="urgent"`）：左側紅色邊線（`.urgent-card`），頂部顯示急徵徽章與位置缺額摘要，CTA 使用紅色。取消／已額滿時移除任何動畫。
+- **Standard**（`variant="default"`）：白底、輕邊框、標準資訊層級，剩餘名額只顯示純文字（`N / M 人`）。
+- **Featured**（`variant="featured"`）：淡橘到白的漸層背景疊加極淡球場紋理，標題旁加 `DateBadge`（日期＋星期），剩餘名額顯示完整 `CapacityBar`，CTA 稍微加大（`.btn-cta.featured`）。從不是整張純橘色。第二、三張精選卡片可加 `compact` prop，維持相同元件與邏輯，只縮小視覺份量（見下方「Featured 不對稱版面」）。
+- **Urgent**（`variant="urgent"`）：左側紅色邊線（`.urgent-card`），頂部只顯示短版狀態徽章「急徵隊友」，位置缺額另起一行（`.shortage-row`），兩者刻意分開——徽章代表「有狀態」，缺額列才是「具體缺什麼」，合併成一個徽章曾經讓文字爆版也讓兩種資訊混在一起難以掃讀。CTA 使用紅色。取消／已額滿時移除任何動畫。
 
 資訊層級（三種共用）：第一層活動名稱／狀態／日期／場地；第二層程度／網高／球制／剩餘名額；第三層價格／CTA／收藏／比較。
+
+## Capacity Indicator
+
+`CapacityBar.jsx`：細線性進度條（4–6px 高），`role="progressbar"` 搭配完整 `aria-valuemin`/`aria-valuemax`/`aria-valuenow`/`aria-valuetext`，`aria-valuenow` 永遠被限制在 `[0, capacity]` 範圍內，即使資料本身不一致（`registeredCount > capacity`）也不會超出。顏色：一般是青綠（`--court-teal`），達到 80% 以上轉為 warning 黃，額滿轉為深藍（`--ink-navy`）——**從不用紅色**製造急迫感，紅色留給真正的錯誤/取消狀態。Featured／Urgent／List 顯示完整進度條，Standard 卡片只顯示簡化文字（同一組資料，不同呈現份量）。
+
+## Date Badge
+
+`DateBadge.jsx`：40×40px 小方塊，顯示日期數字＋單字中文星期（例如「31」＋「五」），`aria-hidden="true"`——純視覺錨點，旁邊一定有完整、可被螢幕閱讀器讀出的日期文字，圖表從不是唯一資訊來源。只用在 Featured lead 卡片與 Timeline／List 列，Standard 卡片維持原本的 meta 文字，不強制每張卡都加上這個徽章。
+
+## Featured 不對稱版面
+
+首頁「精選活動」桌面版（≥1024px）用一個主要（lead）卡片＋最多兩張 `compact` 次要卡片的 2:1 grid；手機維持原本的水平 scroll，同一批卡片、同一個 `EventCard`，不強塞兩欄版面到窄螢幕。精選活動超過 3 場時「查看全部」才會出現，帶去完整的精選列表（一般 `event-grid`，不是不對稱版面——那個版面只服務首頁預覽這一眼）。
+
+## 近期臨打 Timeline
+
+`UrgentTimeline.jsx`：以「今天／明天／其他日期」分組（`groupEventsByTaipeiDate`），每組內按時間排序，每一列都是 `EventListRow`（見下方 Grid/List）加上 `urgent` 參數——跟 EventCard 完全共用收藏、比較、狀態、CTA、位置缺額計算，只是換成時間優先的橫向列呈現，不是另一套邏輯。
+
+## Search & Results Header
+
+Explore 只在瀏覽首頁（無搜尋、無篩選）時顯示 Hero 的完整搜尋框；一旦有搜尋或篩選，Hero 整個消失，改由 `.compact-search-bar`（<640px 才顯示，≥640px 讓 Header 自己的搜尋框接手）維持「隨時可以修改搜尋文字」——兩者共用同一個 `useSearchInput` 狀態，不會有兩份不同步的輸入值。搜尋／篩選結果的標題、結果數、排序整合成一個 `.results-header`：只有一個 `<h1>`（Hero 不存在時），結果數文字包在 `aria-live="polite"` 的 `<span>` 裡，跟旁邊的「清除搜尋及篩選」連結分開，避免整個區塊被重複朗讀。
+
+## Active Filters Summary
+
+`ActiveFiltersSummary.jsx`：手機最多顯示 4 個篩選 chip、平板 5 個、桌面 6 個，超過的收進「+N」按鈕（`aria-expanded` 標示收合/展開狀態），展開後顯示「收合」。「清除全部」與「儲存這組條件」放在獨立的 action row，不跟可移除的篩選 chip 混在一起——chip 代表「一個可移除的條件」，這兩個是頁面層級的操作，混在一起會讓人分不清哪個 pill 是可以點掉的篩選、哪個是按鈕。
+
+## Grid / List 顯示模式
+
+「更多活動」與統一的搜尋/篩選結果列表都支援 Grid（`EventCard`）／List（`EventListRow.jsx`）切換，偏好存在 `localStorage`（`vh-explore-layout`），值壞掉時安全回退成 grid。兩個檢視共用完全相同的資料與商業邏輯（收藏、比較、狀態、CTA），List 只是把同樣的事實排成更緊湊的單行列——不是切換模式時看到兩套不同的資訊。切換按鈕使用 `aria-pressed`，兩個模式各自有清楚的文字標籤，不是一個曖昧的單一圖示切換鈕。
 
 ## Dialogs / Sheets
 
@@ -148,6 +178,8 @@
 ## Accessibility
 
 Icon-only 按鈕皆有 `aria-label`；切換類控制項有 `aria-pressed`；Accordion 有 `aria-expanded`/`aria-controls`；搜尋結果數與 Toast 使用 `aria-live`；表單錯誤透過 `aria-describedby` 關聯欄位；所有 Dialog／Sheet 可鍵盤操作（Tab 循環、Escape 關閉、關閉後 focus restore）；`prefers-reduced-motion` 時停用位移／縮放動畫；觸控目標接近 44×44px（`.icon-btn` 有 `::before` 擴大熱區）；沒有 `href="#"`／`javascript:void`／假按鈕。
+
+空狀態的 `role="status"` 只包住結果訊息文字本身，替代建議清單與重置按鈕都在 live region **外面**——一個互動按鈕坐在 live region 裡，會在畫面更新時被朗讀成「這裡有個按鈕」而不是真正有意義的內容更新，也可能被部分螢幕閱讀器直接忽略掉互動性。FilterModal 支援 `initialSection`／`focusField`：「我需要的位置」在使用者沒有設定常用位置時，開啟篩選視窗並直接展開「排球條件」、把焦點移到位置選項的第一個按鈕上——焦點移動發生在 Modal 完成渲染之後（透過 `useEffect` 依序執行，晚於 Sheet 自己的預設 autofocus），一般點「更多篩選」開啟時則完全不受影響，永遠從「基本條件」開始。
 
 ## Motion
 
