@@ -345,17 +345,19 @@ export default function Explore() {
 
         <main className="content">
           <div className="filter-chips-mobile" aria-label="快速篩選">
-            {QUICK_TYPES.map((t) => (
-              <button
-                key={t.value}
-                type="button"
-                className={`chip primary${filters.type === t.value ? ' active' : ''}`}
-                aria-pressed={filters.type === t.value}
-                onClick={() => handleFilterChange('type', t.value)}
-              >
-                {t.label}
-              </button>
-            ))}
+            <div className="filter-chips-scroll">
+              {QUICK_TYPES.map((t) => (
+                <button
+                  key={t.value}
+                  type="button"
+                  className={`chip primary${filters.type === t.value ? ' active' : ''}`}
+                  aria-pressed={filters.type === t.value}
+                  onClick={() => handleFilterChange('type', t.value)}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
             <button className="icon-btn filter-trigger" aria-label="更多篩選" aria-haspopup="dialog" onClick={() => setFilterOpen(true)}>
               <Icon id="i-filter" size={17} />
             </button>

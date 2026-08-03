@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useEffect } from 'react'
 import Icons from './components/Icons'
 import Toast from './components/Toast'
@@ -29,8 +29,20 @@ function ScrollToTop() {
 }
 
 export default function App() {
+  // HashRouter, not BrowserRouter — GitHub Pages has no server-side rewrite
+  // rule, so a direct/refreshed request for a clean path like /explore is a
+  // real, unavoidable 404 at the HTTP level (the dist/404.html-copies-
+  // index.html trick makes the *page* still render, but the response status
+  // is still a genuine 404, which any status-code check or crawler sees).
+  // With HashRouter, every real navigation only ever requests
+  // /volleyball-hub/ itself — the route lives after the `#`, which the
+  // browser never sends to the server at all, so refreshing any route
+  // (…/#/explore, …/#/event/e1, …) always gets a real 200. No `basename`
+  // needed here: that's for stripping a path prefix, and HashRouter's
+  // "path" is whatever's after `#`, independent of the pre-`#` prefix Vite's
+  // `base` already puts index.html/assets under.
   return (
-    <BrowserRouter basename={import.meta.env.BASE_URL}>
+    <HashRouter>
       <ToastProvider>
         <ProfileProvider>
           <EventsProvider>
@@ -69,6 +81,6 @@ export default function App() {
           </EventsProvider>
         </ProfileProvider>
       </ToastProvider>
-    </BrowserRouter>
+    </HashRouter>
   )
 }

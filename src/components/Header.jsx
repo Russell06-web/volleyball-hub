@@ -40,6 +40,7 @@ export default function Header({
       <div className="brand">
         <span className="brand-mark"><LogoMark /></span>
         <div><b>{title}</b><small>{subtitle}</small></div>
+        <span className="demo-tag" title="前端展示原型，未串接真實後端或金流，報名與付款皆為示範">Demo</span>
       </div>
       <nav className="nav-links" aria-label="主要導覽">
         {NAV_ITEMS.map((item) => (

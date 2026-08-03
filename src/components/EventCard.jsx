@@ -63,6 +63,18 @@ export default function EventCard({ ev, variant = 'default', compact = false }) 
   // height only shows once an organiser has actually specified it.
   const netHeightKnown = ev.netHeight && ev.netHeight !== NET_HEIGHT_UNSPECIFIED
 
+  // Lead Featured card only — real, existing event data (never invented
+  // copy) that gives the lead its extra visual weight some actual
+  // substance instead of just being a bigger empty box. Capped at 2 so
+  // it stays a glance, not another paragraph to read.
+  const isLead = isFeatured && !compact
+  const highlights = []
+  if (isLead && !inactive) {
+    if (ev.hasInsurance) highlights.push({ icon: 'i-shield', label: '含保險' })
+    if (ev.hasCoach) highlights.push({ icon: 'i-whistle', label: '教練指導' })
+    if (ev.soloJoinAllowed) highlights.push({ icon: 'i-users', label: '可單人加入' })
+  }
+
   return (
     <article className={`card event-card${isUrgent ? ' urgent-card' : ''}${isFeatured ? ' featured-card' : ''}${isFeatured && compact ? ' compact' : ''}`}>
       <div className="card-top">
@@ -112,13 +124,20 @@ export default function EventCard({ ev, variant = 'default', compact = false }) 
         {inactive && <span className="tag wait">{EVENT_STATUS_META[status].label}</span>}
         {!inactive && full && <span className="tag wait">已額滿</span>}
       </div>
+      {highlights.length > 0 && (
+        <ul className="card-highlights">
+          {highlights.map((h) => <li key={h.icon}><Icon id={h.icon} size={13} />{h.label}</li>)}
+        </ul>
+      )}
       <ul className="meta">
         <li><Icon id="i-pin" size={14} /><span>{ev.venueName}</span></li>
         <li className="meta-date"><Icon id="i-calendar" size={14} />{formatEventDateLabel(ev.date)}・{ev.startTime}</li>
-        {/* Featured/Urgent get the full capacity bar (see CapacityBar.jsx);
-            Standard keeps the plain count — a deliberately simplified
-            version, not every card needs the same visual weight here. */}
-        {isFeatured || isUrgent ? (
+        {/* The Lead featured card and Urgent get the full capacity bar (see
+            CapacityBar.jsx); compact secondary Featured cards and Standard
+            keep the plain count — every card doesn't need the same visual
+            weight, and the bar's track+label was part of what made the
+            compact secondary slot feel cramped. */}
+        {isLead || isUrgent ? (
           <li className="meta-capacity"><CapacityBar event={ev} /></li>
         ) : (
           <li><Icon id="i-users" size={14} />{ev.registeredCount} / {ev.capacity} 人</li>

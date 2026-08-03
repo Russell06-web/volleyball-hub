@@ -190,6 +190,9 @@ export default function RegisterModal({ event, open, onClose, onConfirm }) {
       </label>
       {errors.agree && <span className="field-error agree-error" id="reg-agree-error">{errors.agree}</span>}
 
+      <p className="demo-inline-note">
+        <Icon id="i-info" size={13} />這是前端展示原型，送出後不會產生真實報名或費用。
+      </p>
       <div className="filter-modal-actions">
         <button className="btn-secondary" onClick={onClose}>取消</button>
         <button className="btn-primary" onClick={submit}>{full ? '確認加入候補' : '確認報名'}</button>

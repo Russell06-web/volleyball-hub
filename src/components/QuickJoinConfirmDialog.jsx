@@ -75,6 +75,9 @@ export default function QuickJoinConfirmDialog({ event, profile, open, onClose, 
         <span>我已閱讀並同意活動須知與{full ? '候補' : '報名'}規範</span>
       </label>
 
+      <p className="demo-inline-note">
+        <Icon id="i-info" size={13} />這是前端展示原型，送出後不會產生真實報名或費用。
+      </p>
       <div className="filter-modal-actions quick-join-actions">
         <button type="button" className="link-btn" onClick={onEditFull}>編輯報名資料</button>
         <button type="button" className="btn-primary" disabled={!agree} onClick={handleConfirm}>

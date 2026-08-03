@@ -92,10 +92,20 @@
 .type-card.active svg{color:var(--brand-orange);}
 
 /* quick chip row + filter trigger (mobile/tablet only) */
-.filter-chips-mobile{display:flex; align-items:center; gap:8px; overflow-x:auto; padding-bottom:4px; margin-bottom:18px; scrollbar-width:none;}
-.filter-chips-mobile::-webkit-scrollbar{display:none;}
-.filter-chips-mobile .chip{flex:none;}
-.filter-trigger{margin-left:auto; flex:none; background:var(--ink-navy); color:#fff; border-color:var(--ink-navy);}
+/* The scrollable chip row and the "更多篩選" trigger are two separate
+   flex children — the trigger never scrolls or fades with the chips, so
+   the right-edge fade below never dims an actual button. */
+.filter-chips-mobile{display:flex; align-items:center; gap:8px; margin-bottom:18px;}
+.filter-chips-scroll{
+  display:flex; gap:8px; flex:1; min-width:0; overflow-x:auto; padding-bottom:4px; scrollbar-width:none;
+  /* Right-edge fade — a persistent hint that there's more to scroll to,
+     not just a hard cut at the viewport edge. */
+  -webkit-mask-image:linear-gradient(to right, black 0%, black calc(100% - 28px), transparent 100%);
+  mask-image:linear-gradient(to right, black 0%, black calc(100% - 28px), transparent 100%);
+}
+.filter-chips-scroll::-webkit-scrollbar{display:none;}
+.filter-chips-scroll .chip{flex:none;}
+.filter-trigger{flex:none; background:var(--ink-navy); color:#fff; border-color:var(--ink-navy);}
 @media (min-width: 1024px){ .filter-chips-mobile{display:none;} }
 
 /* full-screen filter modal (mobile/tablet) */
@@ -142,13 +152,22 @@
    (style.css) and this element's "hidden at desktop" rule would otherwise
    compete at equal specificity, with the winner depending on CSS load
    order rather than intent. Same visual result, but self-contained. */
-.featured-mobile-scroll{display:flex; gap:12px; overflow-x:auto; padding-bottom:6px; margin:0 -16px; padding-left:16px; padding-right:16px; scrollbar-width:thin;}
+.featured-mobile-scroll{
+  display:flex; gap:12px; overflow-x:auto; padding-bottom:6px; margin:0 -16px; padding-left:16px; padding-right:16px; scrollbar-width:thin;
+  -webkit-mask-image:linear-gradient(to right, black 0%, black calc(100% - 28px), transparent 100%);
+  mask-image:linear-gradient(to right, black 0%, black calc(100% - 28px), transparent 100%);
+}
+.featured-mobile-scroll .card{width:82vw; max-width:340px; flex:none;}
 .featured-layout{display:none;}
 .featured-secondary{display:flex; flex-direction:column; gap:12px;}
 @media (min-width: 1024px){
   .featured-mobile-scroll{display:none;}
-  .featured-layout{display:grid; grid-template-columns:2fr 1fr; gap:16px; align-items:stretch;}
-  .featured-lead, .featured-lead .card{height:100%;}
+  /* align-items:start (not stretch) — the lead card is filled out with
+     real content (highlights/venue/capacity) sized to its own natural
+     height instead of being force-stretched to match whatever the
+     secondary column's height happens to be, which used to leave a big
+     empty gap in the lead card whenever the secondary column was shorter. */
+  .featured-layout{display:grid; grid-template-columns:2fr 1fr; gap:16px; align-items:start;}
 }
 
 /* Saved-search entries as compact cards/list-items, not another row of
@@ -159,8 +178,8 @@
   display:flex; align-items:center; gap:10px; background:var(--surface); border:1px solid var(--border-default);
   border-radius:var(--r-md); padding:10px 14px;
 }
-.saved-search-card:hover{border-color:var(--court-teal);}
-.saved-search-card svg{flex:none; color:var(--court-teal);}
+.saved-search-card:hover{border-color:var(--border-strong);}
+.saved-search-card svg{flex:none; color:var(--text-secondary);}
 .saved-search-card-text{display:flex; flex-direction:column; gap:1px; min-width:0;}
 .saved-search-card-text b{font-size:13px;}
 .saved-search-card-text span{font-size:11.5px; color:var(--text-secondary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
@@ -200,24 +219,24 @@
 .event-list{display:flex; flex-direction:column; gap:10px;}
 .event-list-row{
   display:flex; align-items:center; gap:14px; background:var(--surface); border:1px solid var(--border-default);
-  border-radius:var(--r-md); padding:12px 14px; box-shadow:var(--shadow-card);
+  border-radius:var(--r-md); padding:14px; box-shadow:var(--shadow-card);
 }
 .event-list-when{flex:none; width:56px; text-align:center; font-variant-numeric:tabular-nums;}
 .event-list-date{display:block; font-size:12px; font-weight:800; color:var(--text-primary);}
 .event-list-time{display:block; font-size:11px; color:var(--text-secondary);}
-.event-list-main{flex:1; min-width:0; display:flex; flex-direction:column; gap:4px;}
+.event-list-main{flex:1; min-width:0; display:flex; flex-direction:column; gap:5px;}
 .event-list-badge{margin-bottom:2px;}
-.event-list-title{font-size:14px; font-weight:800; color:var(--text-primary); display:block;}
+.event-list-title{font-size:14px; font-weight:800; color:var(--text-primary); display:block; line-height:1.35;}
 .event-list-venue{display:flex; align-items:center; gap:5px; font-size:12px; color:var(--text-secondary); margin:0;}
 .event-list-capacity{flex:none; width:120px;}
-.event-list-actions{flex:none; display:flex; align-items:center; gap:8px;}
+.event-list-actions{flex:none; display:flex; align-items:center; gap:10px;}
 @media (max-width: 767.98px){
-  .event-list-row{flex-wrap:wrap;}
+  .event-list-row{flex-wrap:wrap; row-gap:12px;}
   .event-list-capacity{display:none;}
   /* width:100% with an added margin-left would overflow the row by that
      margin — this stays flush with the date column on the left instead,
      rather than trying to indent it under the title text. */
-  .event-list-actions{width:100%; justify-content:space-between;}
+  .event-list-actions{width:100%; justify-content:space-between; padding-top:2px; border-top:1px solid var(--border-default);}
 }
 
 /* full events: waitlist affordance instead of the primary "報名" CTA */

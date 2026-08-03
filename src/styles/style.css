@@ -99,7 +99,15 @@ img{max-width:100%; display:block;}
 .brand-mark{display:flex; align-items:center; justify-content:center; flex:none;}
 .brand b{display:block; font-size:15px; line-height:1.2;}
 .brand small{color:var(--text-secondary); font-size:11px;}
-.brand > div:last-child{margin-right:auto;}
+.brand > div{margin-right:auto;}
+/* A small, neutral, always-visible reminder this is a demo prototype —
+   never orange/red/teal, those are reserved for CTA/active/status. */
+.demo-tag{
+  flex:none; font-size:9.5px; font-weight:800; letter-spacing:.04em; text-transform:uppercase;
+  color:var(--text-secondary); background:var(--surface-subtle); border:1px solid var(--border-default);
+  border-radius:var(--r-xs); padding:2px 6px; margin-right:6px;
+}
+@media (max-width: 420px){ .demo-tag{display:none;} }
 
 .nav-links{display:none; gap:4px; margin-right:auto;}
 .nav-links a{padding:8px 12px; border-radius:var(--r-pill); font-size:13.5px; font-weight:600; color:var(--text-secondary);}
@@ -190,7 +198,11 @@ img{max-width:100%; display:block;}
 
 /* ================= BADGES / TAGS ================= */
 .badge{display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:800; padding:4px 9px; border-radius:var(--r-pill);}
-.badge.featured{background:var(--brand-orange); color:#fff;}
+/* Navy, not brand-orange — orange is reserved for primary CTAs and active
+   states (see .chip.active, aria-current nav items); "精選" is an
+   editorial label, not an action or a selected state, so it gets the
+   same structural navy the rest of the product uses for emphasis. */
+.badge.featured{background:var(--ink-navy); color:#fff;}
 .badge.featured.lg{padding:6px 14px; font-size:12.5px;}
 .badge.male{background:var(--gender-male-soft); color:var(--gender-male);}
 .badge.female{background:var(--gender-female-soft); color:var(--gender-female);}
@@ -205,21 +217,30 @@ img{max-width:100%; display:block;}
 .badge.live.count{background:var(--danger); color:#fff; min-width:18px; height:18px; padding:0 5px; font-size:10px; justify-content:center;}
 @keyframes pulse{0%,100%{opacity:1;} 50%{opacity:.35;}}
 
-/* Tag colour is deliberate, not decorative: level uses the brand-orange
-   family (a decision-relevant fact worth a glance), city/type uses
-   court-teal (place/location reads as "where you'll be playing"), so the
-   two most-scanned facts on a card are never the same flat grey. */
+/* Tag colour is neutral on purpose — level/city/net-height/format are all
+   plain attributes, not a status or an action, and giving them brand
+   colours (an earlier pass used brand-orange for level, court-teal for
+   city) made the page read as more "colourful" than "organised": a glance
+   couldn't tell whether an orange tag meant "featured" or just "this is
+   the level". Orange/red/teal now only ever appear on a primary CTA, an
+   active/selected state, or a genuine capacity/success/warning/urgent
+   status — every plain attribute tag shares this one neutral treatment. */
 .tag{font-size:11px; font-weight:700; padding:3px 9px; border-radius:var(--r-xs); background:var(--surface-subtle); color:var(--text-secondary);}
-.tag.level{background:var(--brand-orange-soft); color:var(--brand-orange-hover);}
-.tag.type{background:var(--court-teal-soft); color:var(--court-teal-dark);}
 .tag-row{display:flex; gap:6px; flex-wrap:wrap;}
 .tag-row.center{justify-content:center; margin:4px 0;}
 
 .rating{display:inline-flex; align-items:center; gap:4px; font-size:12.5px; font-weight:700; color:var(--accent-gold);}
 
+/* Lead Featured card only — a short, real-data highlight line (see
+   EventCard.jsx), neutral colour like everything else here; it's extra
+   information, not another coloured accent. */
+.card-highlights{display:flex; flex-wrap:wrap; gap:4px 12px; margin:-2px 0 0; padding:0; list-style:none;}
+.card-highlights li{display:flex; align-items:center; gap:5px; font-size:12px; color:var(--text-secondary);}
+.card-highlights svg{flex:none; color:var(--text-secondary);}
+
 /* ================= CARDS ================= */
 .card{background:var(--surface); border:1px solid var(--border-default); border-radius:var(--r-lg); padding:14px; box-shadow:var(--shadow-card); display:flex; flex-direction:column; gap:8px; transition:transform .16s ease, box-shadow .16s ease, border-color .16s ease;}
-.card:hover{border-color:color-mix(in srgb, var(--brand-orange) 45%, var(--border-default)); transform:translateY(-2px); box-shadow:0 4px 10px -4px rgba(26,46,69,.12), 0 14px 28px -14px rgba(26,46,69,.24);}
+.card:hover{border-color:color-mix(in srgb, var(--brand-orange) 45%, var(--border-default)); transform:translateY(-2px); box-shadow:0 8px 20px -12px rgba(26,46,69,.22);}
 .card-top{display:flex; align-items:center; justify-content:space-between;}
 /* Two lines max, then ellipsis — a long activity title never pushes the
    rest of the card's facts down or breaks the grid's row height. */
@@ -236,7 +257,7 @@ img{max-width:100%; display:block;}
 .card-title-row-text{flex:1; min-width:0;}
 .date-badge{
   flex:none; display:flex; flex-direction:column; align-items:center; justify-content:center;
-  width:40px; height:40px; border-radius:var(--r-sm); background:var(--brand-orange-soft); color:var(--brand-orange-hover);
+  width:40px; height:40px; border-radius:var(--r-sm); background:var(--surface-subtle); color:var(--ink-navy);
 }
 .date-badge-day{font-size:15px; font-weight:800; line-height:1.1; font-variant-numeric:tabular-nums;}
 .date-badge-weekday{font-size:9.5px; font-weight:700; letter-spacing:.02em;}
@@ -261,18 +282,14 @@ img{max-width:100%; display:block;}
 .price{font-size:17px; font-weight:800; color:var(--ink-navy); font-variant-numeric:tabular-nums; letter-spacing:-.01em;}
 .price.free{color:var(--success);}
 
-/* Featured — a warm, unmistakably-lighter-not-solid-orange tint plus a
-   very faint court-line texture; date/time gets extra weight since
-   that's the fact someone glancing at a featured strip decides on
-   first. Never the full saturated brand orange as a card background. */
-.featured-card{
-  background:linear-gradient(160deg, var(--brand-orange-soft) 0%, var(--surface) 62%);
-  background-image:linear-gradient(160deg, var(--brand-orange-soft) 0%, var(--surface) 62%), repeating-linear-gradient(135deg, rgba(26,46,69,.03) 0 2px, transparent 2px 22px);
-  border-color:color-mix(in srgb, var(--brand-orange) 25%, var(--border-default));
-}
+/* Featured — plain white/neutral surface, no gradient wash or decorative
+   line texture; the navy "精選" badge and the date-first title row are
+   what marks a card as featured, not a coloured background. Date/time
+   still gets extra weight since that's the fact someone glancing at a
+   featured strip decides on first. */
+.featured-card{background:var(--surface); border-color:var(--border-strong);}
 .featured-card .meta-date{font-weight:700; color:var(--text-primary);}
-.featured-card .meta-date svg{color:var(--brand-orange);}
-.btn-cta.featured{padding:10px 20px; font-size:13px; box-shadow:0 6px 14px -6px color-mix(in srgb, var(--brand-orange) 60%, transparent);}
+.btn-cta.featured{padding:10px 20px; font-size:13px;}
 .btn-cta.sm{padding:7px 14px; font-size:12px;}
 
 .meta{display:flex; flex-direction:column; gap:5px; margin:2px 0;}
@@ -321,12 +338,14 @@ img{max-width:100%; display:block;}
 .see-all:hover{color:var(--brand-orange-hover);}
 .result-count{margin-left:auto; font-size:12px; color:var(--text-secondary); font-variant-numeric:tabular-nums;}
 
-.card-scroll{display:flex; gap:12px; overflow-x:auto; padding-bottom:6px; margin:0 -16px; padding-left:16px; padding-right:16px; scrollbar-width:thin;}
-.event-card{flex:none; width:230px;}
-@media (min-width: 1024px){
-  .card-scroll{overflow:visible; flex-wrap:wrap; margin:0; padding:0;}
-  .event-card{width:auto; flex:1 1 220px;}
-}
+/* NOTE: the fixed-width rule for .event-card used to live here unscoped
+   (bare `.event-card{width:230px}`), which was only ever meant for the
+   horizontal Featured scroll strip — but with no selector scoping it also
+   applied inside .event-grid (更多活動 / Favorites / History), leaving
+   every card ~130px narrower than its actual grid cell on mobile. The
+   fixed width now lives with .featured-mobile-scroll in explore.css,
+   where it's actually needed; .event-grid cards size to their grid cell
+   via width:auto, same as everywhere else. */
 
 .notice{display:flex; gap:10px; background:var(--info-soft); color:var(--info); border-radius:var(--r-md); padding:12px 14px; margin-top:12px;}
 .notice b{display:block; font-size:12.5px; margin-bottom:4px;}
